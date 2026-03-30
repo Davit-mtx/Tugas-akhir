@@ -207,6 +207,140 @@ def quantize_sequence(seq: np.ndarray, Q: int) -> np.ndarray:
     q = np.floor((1.0 / float(Q)) * 1e4 * (seq % 1.0)).astype(np.int64)
     return q
 
+#@ tambahan pelengkap dan beberapa perbaikan pada bagian 
+# =========================================================
+# 4A) Helper khusus Oravec untuk tahap plaintext-related
+# =========================================================
+
+# Sesuai paper Oravec, transient pada tahap plaintext-related memakai 1000 iterasi.
+ORAVEC_PR_TRANSIENT = 1000
+
+
+def _oravec_quantize_max(seq: np.ndarray, max_value: int) -> np.ndarray:
+    """
+    Kuantisasi ala Oravec untuk menghasilkan bilangan bulat pada rentang 0..max_value.
+
+    Ide penting:
+    - empat digit desimal pertama "dibuang" dengan (10^4 * x) mod 1
+    - lalu dipetakan ke domain diskret 0..max_value
+
+    Hasil:
+        q_n = floor( (max_value + 1) * ((10^4 * seq_n) mod 1) )
+    """
+    seq = np.asarray(seq, dtype=np.float64)
+    frac = (1e4 * (seq % 1.0)) % 1.0
+    q = np.floor((max_value + 1) * frac).astype(np.int64)
+    return q
+
+
+def _logistic_sequence_with_pattern(
+    x0: float,
+    r_pattern: np.ndarray,
+    length: int,
+    transient: int = 0,
+) -> np.ndarray:
+    """
+    Bangkitkan deret logistic map ketika parameter r berubah mengikuti pola tertentu.
+
+    Rumus penting:
+        x_{n+1} = r_n * x_n * (1 - x_n)
+
+    dengan r_n diambil secara siklik dari r_pattern.
+    """
+    r_pattern = np.asarray(r_pattern, dtype=np.float64)
+    if r_pattern.ndim != 1 or r_pattern.size == 0:
+        raise ValueError("r_pattern harus vektor 1D non-kosong.")
+
+    total_steps = transient + length
+    x = float(x0)
+    out = np.empty(total_steps, dtype=np.float64)
+
+    for t in range(total_steps):
+        r_t = float(r_pattern[t % r_pattern.size])
+        x = r_t * x * (1.0 - x)
+        out[t] = x
+
+    return out[transient:]
+
+
+def _build_lt_row_major(rm: np.ndarray, H_: int, W_: int) -> np.ndarray:
+    """
+    Membuat lookup table LT ukuran H' x W' dengan pola berulang (r1..r8)
+    menggunakan row-major order.
+    """
+    total = H_ * W_
+    flat = np.resize(rm.astype(np.float64), total)
+    LT = flat.reshape((H_, W_), order="C")
+    return LT
+
+
+def _shuffle_lt_oravec(LT: np.ndarray, rm: np.ndarray) -> np.ndarray:
+    """
+    Mengacak LT dengan dua tahap circular shift sesuai Oravec:
+    1) shift kolom memakai seq1'
+    2) shift baris memakai seq2'
+
+    seq1:
+      pattern = r4, r8, r3, r7, r2, r6, r1, r5
+      length  = W'
+      max     = H' - 1
+
+    seq2:
+      pattern = r5, r1, r6, r2, r7, r3, r8, r4
+      length  = H'
+      max     = W' - 1
+    """
+    H_, W_ = LT.shape
+
+    #@ Pattern sesuai Table 1 paper Oravec
+    seq1_pattern = np.array([rm[3], rm[7], rm[2], rm[6], rm[1], rm[5], rm[0], rm[4]], dtype=np.float64)
+    seq2_pattern = np.array([rm[4], rm[0], rm[5], rm[1], rm[6], rm[2], rm[7], rm[3]], dtype=np.float64)
+
+    #@ Generate deret chaos dengan x0 = 0.5 dan transient 1000
+    seq1 = _logistic_sequence_with_pattern(
+        x0=0.5,
+        r_pattern=seq1_pattern,
+        length=W_,
+        transient=ORAVEC_PR_TRANSIENT,
+    )
+    seq2 = _logistic_sequence_with_pattern(
+        x0=0.5,
+        r_pattern=seq2_pattern,
+        length=H_,
+        transient=ORAVEC_PR_TRANSIENT,
+    )
+
+    #@ Kuantisasi ke rentang shift
+    seq1_q = _oravec_quantize_max(seq1, max_value=H_ - 1)  # shift untuk kolom
+    seq2_q = _oravec_quantize_max(seq2, max_value=W_ - 1)  # shift untuk baris
+
+    #@ Oravec: kolom dulu, lalu baris
+    LT_shuffled = _circular_shift_cols(LT, seq1_q)
+    LT_shuffled = _circular_shift_rows(LT_shuffled, seq2_q)
+
+    return LT_shuffled
+
+
+def _get_oravec_x1001(rm: np.ndarray) -> float:
+    """
+    Menghasilkan x1001 untuk tahap plaintext-related.
+
+    Sesuai paper:
+    - x0 = 0.5
+    - transient = 1000
+    - pattern seq3 = r1, r2, ..., r8
+    - hanya x1001 yang disimpan
+    """
+    seq3_pattern = np.array([rm[0], rm[1], rm[2], rm[3], rm[4], rm[5], rm[6], rm[7]], dtype=np.float64)
+
+    x1001 = _logistic_sequence_with_pattern(
+        x0=0.5,
+        r_pattern=seq3_pattern,
+        length=1,
+        transient=ORAVEC_PR_TRANSIENT,
+    )[0]
+
+    return float(x1001)
 
 def build_S1_S2_S3(K_hex: str, cfg: BaselineConfig, H_: int, W_: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -275,55 +409,137 @@ def confusion_circular_shift(P_in: np.ndarray, S1: np.ndarray) -> np.ndarray:
     out = _circular_shift_rows(out, S1_row)
     return out
 
-
-# =========================================================
-# 6) Diffusion: placeholder (HARUS kamu samakan dengan proposalmu)
-# =========================================================
-
-def diffusion_placeholder(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
+def _add_mod256(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
-    WARNING:
-    Diffusion adalah bagian yang paling sering berbeda detailnya.
-    Di proposal kamu ada "multi-arah + XOR/mod 256" dan dikendalikan S2.
-    Karena rumus persisnya belum kamu paste di sini, saya buat diffusion minimal deterministik:
+    Penjumlahan modulo 256 pada domain uint8.
+    Diproses di uint16 dulu agar tidak overflow sebelum modulo.
+    """
+    return ((a.astype(np.uint16) + b.astype(np.uint16)) % 256).astype(np.uint8)
 
-    - Flatten P menjadi 1D row-major.
-    - Scan forward: y[i] = (x[i] XOR S2[i]) XOR y[i-1]
-    - Lalu scan backward: y[i] = (y[i] XOR S2[i]) XOR y[i+1]
-    - Reshape kembali.
+# =========================================================
+#% 6) Diffusion: placeholder (HARUS kamu samakan dengan proposalmu)
+# =========================================================
 
-    Ini menghasilkan efek difusi (perubahan satu piksel mempengaruhi banyak output),
-    dan masih invertible (dengan definisi inverse yang tepat).
+#! salah dan masih sebagai backup
+# def diffusion_placeholder(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
+#     """
+#     WARNING:
+#     Diffusion adalah bagian yang paling sering berbeda detailnya.
+#     Di proposal kamu ada "multi-arah + XOR/mod 256" dan dikendalikan S2.
+#     Karena rumus persisnya belum kamu paste di sini, saya buat diffusion minimal deterministik:
 
-    Nanti kamu tinggal GANTI fungsi ini dengan diffusion yang benar sesuai proposal.
+#     - Flatten P menjadi 1D row-major.
+#     - Scan forward: y[i] = (x[i] XOR S2[i]) XOR y[i-1]
+#     - Lalu scan backward: y[i] = (y[i] XOR S2[i]) XOR y[i+1]
+#     - Reshape kembali.
+
+#     Ini menghasilkan efek difusi (perubahan satu piksel mempengaruhi banyak output),
+#     dan masih invertible (dengan definisi inverse yang tepat).
+
+#     Nanti kamu tinggal GANTI fungsi ini dengan diffusion yang benar sesuai proposal.
+#     """
+#     H_, W_ = P_in.shape
+#     N = H_ * W_
+#     if S2.size != N:
+#         raise ValueError(f"Ukuran S2 harus H'*W'={N}, dapat {S2.size}.")
+
+#     x = P_in.flatten(order="C").astype(np.uint8)
+#     k = S2.astype(np.uint8)
+
+#     y = np.empty_like(x)
+
+#     # ===== Scan maju (forward diffusion) =====
+#     prev = np.uint8(0)
+#     for i in range(N):
+#         # BARIS PENTING: XOR chaining (difusi)
+#         y[i] = (x[i] ^ k[i]) ^ prev
+#         prev = y[i]
+
+#     # ===== Scan mundur (backward diffusion) =====
+#     z = np.empty_like(y)
+#     nxt = np.uint8(0)
+#     for i in range(N - 1, -1, -1):
+#         # BARIS PENTING: XOR chaining reverse
+#         z[i] = (y[i] ^ k[i]) ^ nxt
+#         nxt = z[i]
+
+#     return z.reshape((H_, W_), order="C").astype(np.uint8)
+
+def diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
+    """
+    Four-dimensional diffusion stage ala Oravec.
+
+    Catatan penting:
+    - Core operator di sini mengikuti paper Oravec:
+      1) top to bottom
+      2) left to right
+      3) bottom to top
+      4) right to left
+    - Pada tiap scan, vektor yang sedang diproses dikombinasikan dengan:
+      * satu vektor via penjumlahan modulo 256
+      * satu vektor via XOR
+    - Saat ini S2 hanya divalidasi ukurannya dan dipertahankan di signature
+      agar pipeline kamu tetap kompatibel dengan proposal.
+      Karena proposal belum menuliskan operator S2 secara eksplisit, saya
+      sengaja tidak "mengarang" pemakaian S2 di diffusion.
     """
     H_, W_ = P_in.shape
     N = H_ * W_
+
     if S2.size != N:
         raise ValueError(f"Ukuran S2 harus H'*W'={N}, dapat {S2.size}.")
 
-    x = P_in.flatten(order="C").astype(np.uint8)
-    k = S2.astype(np.uint8)
+    P = P_in.astype(np.uint8).copy()
 
-    y = np.empty_like(x)
+    # -------------------------------------------------
+    # Scan 1: top -> bottom
+    # add : row l-1
+    # xor : row l+1
+    # wrap-around:
+    #   l-1 < 0  -> H_-1
+    #   l+1 >= H_ -> 0
+    # -------------------------------------------------
+    for l in range(H_):
+        add_row = P[l - 1, :] if l > 0 else P[H_ - 1, :]
+        xor_row = P[l + 1, :] if l < H_ - 1 else P[0, :]
+        P[l, :] = _add_mod256(P[l, :], add_row) ^ xor_row
 
-    # ===== Scan maju (forward diffusion) =====
-    prev = np.uint8(0)
-    for i in range(N):
-        # BARIS PENTING: XOR chaining (difusi)
-        y[i] = (x[i] ^ k[i]) ^ prev
-        prev = y[i]
+    # -------------------------------------------------
+    # Scan 2: left -> right
+    # add : col k-1
+    # xor : col k+1
+    # wrap-around:
+    #   k-1 < 0  -> W_-1
+    #   k+1 >= W_ -> 0
+    # -------------------------------------------------
+    for k in range(W_):
+        add_col = P[:, k - 1] if k > 0 else P[:, W_ - 1]
+        xor_col = P[:, k + 1] if k < W_ - 1 else P[:, 0]
+        P[:, k] = _add_mod256(P[:, k], add_col) ^ xor_col
 
-    # ===== Scan mundur (backward diffusion) =====
-    z = np.empty_like(y)
-    nxt = np.uint8(0)
-    for i in range(N - 1, -1, -1):
-        # BARIS PENTING: XOR chaining reverse
-        z[i] = (y[i] ^ k[i]) ^ nxt
-        nxt = z[i]
+    # -------------------------------------------------
+    # Scan 3: bottom -> top
+    # add : row l+1
+    # xor : row l-1
+    # wrap-around sama
+    # -------------------------------------------------
+    for l in range(H_ - 1, -1, -1):
+        add_row = P[l + 1, :] if l < H_ - 1 else P[0, :]
+        xor_row = P[l - 1, :] if l > 0 else P[H_ - 1, :]
+        P[l, :] = _add_mod256(P[l, :], add_row) ^ xor_row
 
-    return z.reshape((H_, W_), order="C").astype(np.uint8)
+    # -------------------------------------------------
+    # Scan 4: right -> left
+    # add : col k+1
+    # xor : col k-1
+    # wrap-around sama
+    # -------------------------------------------------
+    for k in range(W_ - 1, -1, -1):
+        add_col = P[:, k + 1] if k < W_ - 1 else P[:, 0]
+        xor_col = P[:, k - 1] if k > 0 else P[:, W_ - 1]
+        P[:, k] = _add_mod256(P[:, k], add_col) ^ xor_col
 
+    return P.astype(np.uint8)
 
 # =========================================================
 # 7) Key Whitening: XOR dengan mask dari S3
@@ -347,56 +563,126 @@ def key_whitening(P_in: np.ndarray, S3: np.ndarray) -> np.ndarray:
 # =========================================================
 # 8) Plaintext-related row-wise (placeholder terstruktur)
 # =========================================================
+#! salah
+# def plaintext_related_encrypt_placeholder(
+#     Pprime: np.ndarray,
+#     rm: np.ndarray,
+#     cfg: BaselineConfig,
+#     K_hex: str,
+# ) -> np.ndarray:
+#     """
+#     WARNING:
+#     Tahap plaintext-related Oravec punya lookup table LT dan pembangkitan keystream per baris,
+#     dengan modifikasi parameter per baris:
+#         LT(a,:) = LT(a,:) + 10^{-15}*65536*P'(a-1,:)
 
-def plaintext_related_encrypt_placeholder(
+#     Karena definisi detail LT shuffle + cara membentuk KS(a,:) dari LT(a,:) cukup spesifik,
+#     saya buat placeholder yang tetap:
+#     - deterministik
+#     - menghasilkan output berbeda dari input
+#     - mudah diganti dengan implementasi final sesuai proposal
+
+#     Placeholder ini:
+#     - membangkitkan keystream per baris dari logistic map global berbasis key
+#     - XOR-kan ke setiap baris
+
+#     Nanti kamu GANTI isi fungsi ini dengan implementasi LT + update parameter (2.4) + XOR (2.5).
+#     """
+#     H_, W_ = Pprime.shape
+
+#     # Buat seed x0 deterministik dari key
+#     K_hex_clean = K_hex.strip().lower().replace("0x", "")
+#     seed_int = int(K_hex_clean[-8:], 16)  # ambil 32-bit akhir
+#     x0 = ((seed_int % 10_000_000) + 1) / 10_000_001.0
+
+#     # Pakai r rata-rata sebagai placeholder (nanti ganti pakai LT(a,:))
+#     r = float(np.mean(rm))
+
+#     out = Pprime.copy().astype(np.uint8)
+
+#     for a in range(H_):
+#         # Bangkitkan deret sepanjang W_ + T0
+#         seq = logistic_map_sequence(x0=x0, r=r, n=cfg.T0 + W_ + 1)[cfg.T0:cfg.T0 + W_]
+#         ks_int = (quantize_sequence(seq, cfg.Q) % 256).astype(np.uint8)
+
+#         # ===== BARIS PENTING: XOR row-wise (sesuai struktur persamaan 2.5) =====
+#         out[a, :] = out[a, :] ^ ks_int
+
+#         # update x0 agar baris berbeda (placeholder)
+#         x0 = float(seq[-1])
+
+#     return out
+
+#$ revisi
+
+def plaintext_related_encrypt(
     Pprime: np.ndarray,
     rm: np.ndarray,
     cfg: BaselineConfig,
-    K_hex: str,
 ) -> np.ndarray:
     """
-    WARNING:
-    Tahap plaintext-related Oravec punya lookup table LT dan pembangkitan keystream per baris,
-    dengan modifikasi parameter per baris:
-        LT(a,:) = LT(a,:) + 10^{-15}*65536*P'(a-1,:)
+    Plaintext-related row-wise encryption sesuai Oravec.
 
-    Karena definisi detail LT shuffle + cara membentuk KS(a,:) dari LT(a,:) cukup spesifik,
-    saya buat placeholder yang tetap:
-    - deterministik
-    - menghasilkan output berbeda dari input
-    - mudah diganti dengan implementasi final sesuai proposal
-
-    Placeholder ini:
-    - membangkitkan keystream per baris dari logistic map global berbasis key
-    - XOR-kan ke setiap baris
-
-    Nanti kamu GANTI isi fungsi ini dengan implementasi LT + update parameter (2.4) + XOR (2.5).
+    Langkah besar:
+    1) Bangun LT ukuran H' x W' dengan pola (r1..r8) row-major
+    2) Shuffle LT:
+       - column circular shift dengan seq1'
+       - row circular shift dengan seq2'
+    3) Bangkitkan x1001 dari seq3 (x0=0.5, transient=1000)
+    4) Untuk tiap baris l:
+       - modifikasi LT(l,:) dengan plaintext row sebelumnya
+       - bangkitkan seqplr sepanjang W' TANPA transient tambahan
+       - kuantisasi ke 0..255
+       - XOR dengan baris plaintext saat ini
     """
     H_, W_ = Pprime.shape
+    Pprime = Pprime.astype(np.uint8)
 
-    # Buat seed x0 deterministik dari key
-    K_hex_clean = K_hex.strip().lower().replace("0x", "")
-    seed_int = int(K_hex_clean[-8:], 16)  # ambil 32-bit akhir
-    x0 = ((seed_int % 10_000_000) + 1) / 10_000_001.0
+    # -------------------------------------------------
+    # 1) Build LT dengan row-major repeating (r1..r8)
+    # -------------------------------------------------
+    LT = _build_lt_row_major(rm, H_, W_)
 
-    # Pakai r rata-rata sebagai placeholder (nanti ganti pakai LT(a,:))
-    r = float(np.mean(rm))
+    # -------------------------------------------------
+    # 2) Shuffle LT sesuai Oravec
+    # -------------------------------------------------
+    LT = _shuffle_lt_oravec(LT, rm)
 
-    out = Pprime.copy().astype(np.uint8)
+    # -------------------------------------------------
+    # 3) Ambil x1001 dari seq3
+    # -------------------------------------------------
+    x1001 = _get_oravec_x1001(rm)
 
-    for a in range(H_):
-        # Bangkitkan deret sepanjang W_ + T0
-        seq = logistic_map_sequence(x0=x0, r=r, n=cfg.T0 + W_ + 1)[cfg.T0:cfg.T0 + W_]
-        ks_int = (quantize_sequence(seq, cfg.Q) % 256).astype(np.uint8)
+    # -------------------------------------------------
+    # 4) Row-wise plaintext-related encryption
+    # -------------------------------------------------
+    out = np.empty_like(Pprime, dtype=np.uint8)
 
-        # ===== BARIS PENTING: XOR row-wise (sesuai struktur persamaan 2.5) =====
-        out[a, :] = out[a, :] ^ ks_int
+    for l in range(H_):
+        # Untuk baris pertama, gunakan wrap-around: baris sebelumnya = baris terakhir
+        prev_row = Pprime[l - 1, :] if l > 0 else Pprime[H_ - 1, :]
 
-        # update x0 agar baris berbeda (placeholder)
-        x0 = float(seq[-1])
+        # BARIS PENTING:
+        # LT(l,:) = LT(l,:) + 10^-15 * 65536 * P'(l-1,:)
+        LT_row_mod = LT[l, :] + (10.0 ** -15) * 65536.0 * prev_row.astype(np.float64)
+
+        # Bangkitkan seqplr sepanjang W' tanpa transient tambahan,
+        # dengan initial value x1001 dan parameter berubah mengikuti LT_row_mod
+        seqplr = _logistic_sequence_with_pattern(
+            x0=x1001,
+            r_pattern=LT_row_mod,
+            length=W_,
+            transient=0,
+        )
+
+        # Kuantisasi ke byte 0..255
+        ks_row = _oravec_quantize_max(seqplr, max_value=255).astype(np.uint8)
+
+        # BARIS PENTING:
+        # P^(pr)(l,:) = P'(l,:) XOR seq'_plr
+        out[l, :] = Pprime[l, :] ^ ks_row
 
     return out
-
 
 # =========================================================
 # 9) Inverse rearrangement untuk menghasilkan cipher-image format
@@ -483,10 +769,10 @@ def encrypt_baseline(
     H_, W_ = Pprime.shape
 
     # ---------------------------
-    # 3) Plaintext-related (placeholder)
+    # 3) Plaintext-related 
     #    TODO: ganti dengan implementasi LT + update parameter (2.4) + XOR (2.5)
     # ---------------------------
-    Ppr = plaintext_related_encrypt_placeholder(Pprime, rm, cfg, K_hex)
+    Ppr = plaintext_related_encrypt(Pprime, rm, cfg)
     if return_debug:
         debug["Ppr"] = Ppr.copy()
 
@@ -508,10 +794,10 @@ def encrypt_baseline(
         debug["Pconf"] = Pconf.copy()
 
     # ---------------------------
-    # 6) Diffusion (placeholder)
+    # 6) Diffusion oravec
     #    TODO: ganti dengan diffusion multi-arah sesuai proposal
     # ---------------------------
-    Pdiff = diffusion_placeholder(Pconf, S2)
+    Pdiff = diffusion_oravec(Pconf, S2)
     if return_debug:
         debug["Pdiff"] = Pdiff.copy()
 

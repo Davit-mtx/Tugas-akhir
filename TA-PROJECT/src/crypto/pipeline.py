@@ -491,6 +491,9 @@ def diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
 
     P = P_in.astype(np.uint8).copy()
 
+    #Reshape S2 1D menjadi matriks 2D berukuran H' x W'
+    S2_mat = S2.reshape((H_, W_)).astype(np.uint8)
+
     # -------------------------------------------------
     # Scan 1: top -> bottom
     # add : row l-1
@@ -502,7 +505,7 @@ def diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
     for l in range(H_):
         add_row = P[l - 1, :] if l > 0 else P[H_ - 1, :]
         xor_row = P[l + 1, :] if l < H_ - 1 else P[0, :]
-        P[l, :] = _add_mod256(P[l, :], add_row) ^ xor_row
+        P[l, :] = _add_mod256(P[l, :], add_row) ^ xor_row ^ S2_mat[l,:]
 
     # -------------------------------------------------
     # Scan 2: left -> right
@@ -515,7 +518,7 @@ def diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
     for k in range(W_):
         add_col = P[:, k - 1] if k > 0 else P[:, W_ - 1]
         xor_col = P[:, k + 1] if k < W_ - 1 else P[:, 0]
-        P[:, k] = _add_mod256(P[:, k], add_col) ^ xor_col
+        P[:, k] = _add_mod256(P[:, k], add_col) ^ xor_col ^ S2_mat[:,k]
 
     # -------------------------------------------------
     # Scan 3: bottom -> top
@@ -526,7 +529,7 @@ def diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
     for l in range(H_ - 1, -1, -1):
         add_row = P[l + 1, :] if l < H_ - 1 else P[0, :]
         xor_row = P[l - 1, :] if l > 0 else P[H_ - 1, :]
-        P[l, :] = _add_mod256(P[l, :], add_row) ^ xor_row
+        P[l, :] = _add_mod256(P[l, :], add_row) ^ xor_row ^ S2_mat[l,:]
 
     # -------------------------------------------------
     # Scan 4: right -> left
@@ -537,9 +540,9 @@ def diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
     for k in range(W_ - 1, -1, -1):
         add_col = P[:, k + 1] if k < W_ - 1 else P[:, 0]
         xor_col = P[:, k - 1] if k > 0 else P[:, W_ - 1]
-        P[:, k] = _add_mod256(P[:, k], add_col) ^ xor_col
+        P[:, k] = _add_mod256(P[:, k], add_col) ^ xor_col ^ S2_mat[:,k]
 
-    return P.astype(np.uint8)
+    return P
 
 # =========================================================
 # 7) Key Whitening: XOR dengan mask dari S3
@@ -660,7 +663,7 @@ def plaintext_related_encrypt(
 
     for l in range(H_):
         # Untuk baris pertama, gunakan wrap-around: baris sebelumnya = baris terakhir
-        prev_row = Pprime[l - 1, :] if l > 0 else Pprime[H_ - 1, :]
+        prev_row = Pprime[l - 1, :] if l > 0 else np.full(W_, 128, dtype=np.uint8)
 
         # BARIS PENTING:
         # LT(l,:) = LT(l,:) + 10^-15 * 65536 * P'(l-1,:)
@@ -832,3 +835,132 @@ if __name__ == "__main__":
     C, dbg = encrypt_baseline(P, K, return_debug=True)
     print("Plain shape:", P.shape, "Cipher shape:", C.shape)
     print("Stages:", list(dbg.keys()))
+
+
+# =========================================================
+# =========================================================
+#                   DECRYPTION PIPELINE
+# =========================================================
+# =========================================================
+
+def _sub_mod256(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """
+    Pengurangan modulo 256 pada domain uint8.
+    Invers deterministik dari _add_mod256.
+    """
+    return ((a.astype(np.int16) - b.astype(np.int16)) % 256).astype(np.uint8)
+
+# ---------------------------------------------------------
+# 1. Inverse Diffusion
+# ---------------------------------------------------------
+def inverse_diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
+    """
+    Invers dari 4D diffusion Oravec.
+    Pemindaian dilakukan dengan urutan terbalik (Scan 4 -> 3 -> 2 -> 1)
+    dan arah iterasinya juga dibalik sempurna.
+    """
+    H_, W_ = P_in.shape
+    P = P_in.astype(np.uint8).copy()
+    S2_mat = S2.reshape((H_, W_)).astype(np.uint8)
+
+    # Reversing Scan 4 (Kanan -> Kiri). Dekripsi berbalik jadi (Kiri -> Kanan)
+    for k in range(W_):
+        add_col = P[:, k + 1] if k < W_ - 1 else P[:, 0]
+        xor_col = P[:, k - 1] if k > 0 else P[:, W_ - 1]
+        P[:, k] = _sub_mod256(P[:, k] ^ xor_col ^ S2_mat[:, k], add_col)
+
+    # Reversing Scan 3 (Bawah -> Atas). Dekripsi berbalik jadi (Atas -> Bawah)
+    for l in range(H_):
+        add_row = P[l + 1, :] if l < H_ - 1 else P[0, :]
+        xor_row = P[l - 1, :] if l > 0 else P[H_ - 1, :]
+        P[l, :] = _sub_mod256(P[l, :] ^ xor_row ^ S2_mat[l, :], add_row)
+
+    # Reversing Scan 2 (Kiri -> Kanan). Dekripsi berbalik jadi (Kanan -> Kiri)
+    for k in range(W_ - 1, -1, -1):
+        add_col = P[:, k - 1] if k > 0 else P[:, W_ - 1]
+        xor_col = P[:, k + 1] if k < W_ - 1 else P[:, 0]
+        P[:, k] = _sub_mod256(P[:, k] ^ xor_col ^ S2_mat[:, k], add_col)
+
+    # Reversing Scan 1 (Atas -> Bawah). Dekripsi berbalik jadi (Bawah -> Atas)
+    for l in range(H_ - 1, -1, -1):
+        add_row = P[l - 1, :] if l > 0 else P[H_ - 1, :]
+        xor_row = P[l + 1, :] if l < H_ - 1 else P[0, :]
+        P[l, :] = _sub_mod256(P[l, :] ^ xor_row ^ S2_mat[l, :], add_row)
+
+    return P
+
+# ---------------------------------------------------------
+# 2. Inverse Confusion
+# ---------------------------------------------------------
+def inverse_confusion_circular_shift(P_in: np.ndarray, S1: np.ndarray) -> np.ndarray:
+    """
+    Invers dari confusion. Urutan shift dibalik: baris dulu, baru kolom.
+    Arah shift di-negasikan (minus).
+    """
+    H_, W_ = P_in.shape
+    S1_row = (S1[:H_].astype(np.int64) % W_)
+    S1_col = (S1[H_:].astype(np.int64) % H_)
+
+    # Undo row shifts then col shifts
+    out = _circular_shift_rows(P_in, -S1_row)
+    out = _circular_shift_cols(out, -S1_col)
+    return out
+
+# ---------------------------------------------------------
+# 3. Inverse Plaintext-Related
+# ---------------------------------------------------------
+def inverse_plaintext_related(Ppr: np.ndarray, rm: np.ndarray, cfg: BaselineConfig) -> np.ndarray:
+    H_, W_ = Ppr.shape
+    Pprime_dec = np.empty_like(Ppr, dtype=np.uint8)
+
+    LT = _build_lt_row_major(rm, H_, W_)
+    LT = _shuffle_lt_oravec(LT, rm)
+    x1001 = _get_oravec_x1001(rm)
+
+    for l in range(H_):
+        # KUNCI DEKRIPSI: Baris 0 menggunakan IV statis (angka 128) agar tidak terjadi deadlock
+        prev_row = Pprime_dec[l - 1, :] if l > 0 else np.full(W_, 128, dtype=np.uint8)
+
+        LT_row_mod = LT[l, :] + (10.0 ** -15) * 65536.0 * prev_row.astype(np.float64)
+        
+        seqplr = _logistic_sequence_with_pattern(x0=x1001, r_pattern=LT_row_mod, length=W_, transient=0)
+        ks_row = _oravec_quantize_max(seqplr, max_value=255).astype(np.uint8)
+
+        # XOR lagi untuk mendapatkan Pprime_dec (karena XOR bersifat involutif)
+        Pprime_dec[l, :] = Ppr[l, :] ^ ks_row
+
+    return Pprime_dec
+
+# ---------------------------------------------------------
+# 4. Fungsi Utama: Decrypt Baseline
+# ---------------------------------------------------------
+def decrypt_baseline(C: np.ndarray, K_hex: str, cfg: Optional[BaselineConfig] = None) -> np.ndarray:
+    if cfg is None:
+        cfg = BaselineConfig()
+
+    Km_dec = split_key_128hex_to_subkeys(K_hex)
+    rm = rm_from_subkeys_oravec(Km_dec)
+
+    # 1. Forward rearrange cipher image to get correct matrix format and meta
+    # Ini trik penting karena fungsi rearrange_image mendatar-kan RGB menjadi matriks H' x W'
+    Pout, meta = rearrange_image(C)
+    H_, W_ = Pout.shape
+
+    S1, S2, S3 = build_S1_S2_S3(K_hex, cfg, H_, W_)
+
+    # Step 1: Inverse Whitening (XOR)
+    Pdiff = key_whitening(Pout, S3)
+
+    # Step 2: Inverse Diffusion
+    Pconf = inverse_diffusion_oravec(Pdiff, S2)
+
+    # Step 3: Inverse Confusion
+    Ppr = inverse_confusion_circular_shift(Pconf, S1)
+
+    # Step 4: Inverse Plaintext-Related
+    Pprime_dec = inverse_plaintext_related(Ppr, rm, cfg)
+
+    # Step 5: Rekonstruksi ke Citra Asli
+    P_dec = inverse_rearrange_to_image(Pprime_dec, meta)
+
+    return P_dec

@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I80_18_02.png,high,7.99902,0.00175,0.00179,-0.00085,99.44204,33.45833,0.6771,0.6697,True

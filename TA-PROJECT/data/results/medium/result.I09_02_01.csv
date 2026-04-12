@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I09_02_01.png,medium,7.99913,0.00144,-0.00192,0.0024,99.14347,33.37081,0.6632,0.6625,True

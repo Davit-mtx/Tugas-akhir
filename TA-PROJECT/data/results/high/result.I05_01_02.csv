@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I05_01_02.png,high,7.99899,0.00194,-0.00119,-0.00023,99.12567,33.4643,0.6425,0.6538,True

@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I44_15_03.png,low,7.99918,0.00029,0.00013,0.0021,99.29555,33.50553,0.6951,0.6968,True

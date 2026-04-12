@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I16_18_05.png,high,7.99918,-0.00078,0.00075,-0.00224,99.34285,33.35264,0.6403,0.6451,True

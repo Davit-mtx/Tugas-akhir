@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I57_01_01.png,high,7.99893,0.00104,-0.00151,-0.00546,99.1979,33.39032,0.6641,0.6977,True

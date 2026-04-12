@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I32_05_02.png,medium,7.99894,-7e-05,3e-05,-0.00433,99.42169,33.46576,0.669,0.6949,True

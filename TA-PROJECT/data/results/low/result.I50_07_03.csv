@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I50_07_03.png,low,7.99904,0.00032,0.00216,-0.00099,99.44458,33.53198,0.7008,0.7369,True

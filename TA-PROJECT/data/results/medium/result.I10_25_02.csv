@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I10_25_02.png,medium,7.99899,0.00047,-0.00188,-0.00104,99.36727,33.54814,0.6713,0.6609,True

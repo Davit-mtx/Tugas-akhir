@@ -4,7 +4,7 @@ import numpy as np
 
 from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConfig
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 # 1. Setup Data dan Kunci
 img_path = PROJECT_ROOT / "data/samples_30_per_class/high/I04_04_01.png"

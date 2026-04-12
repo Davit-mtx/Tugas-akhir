@@ -1,0 +1,2 @@
+File Name,Category,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),Lossless
+I18_07_02.png,low,7.99904,0.00205,-0.00402,-0.0009,99.31437,33.52999,0.6763,0.6864,True

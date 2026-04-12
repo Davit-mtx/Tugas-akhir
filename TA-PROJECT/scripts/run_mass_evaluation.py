@@ -1,0 +1,130 @@
+
+import sys
+import time
+from pathlib import Path
+import cv2
+import numpy as np
+import pandas as pd
+
+# Setup Path agar folder src/ terbaca
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(PROJECT_ROOT))
+
+from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConfig
+from src.metrics.metric import calculate_entropy, calculate_correlation, calculate_npcr_uaci, verify_lossless
+
+def main():
+    print("=== MEMULAI EVALUASI MASSAL (MASS EVALUATION) ===")
+    
+    # 1. Setup Direktori Input dan Output
+    input_base_dir = PROJECT_ROOT / "data/samples_30_per_class"
+    output_base_dir = PROJECT_ROOT / "data/results"
+    
+    categories = ['high', 'medium', 'low']
+    K = "00112233445566778899aabbccddeeff"
+    cfg = BaselineConfig()
+
+    # List untuk menyimpan semua hasil demi membuat Master Tabel
+    all_results = []
+
+    # 2. Looping per Kategori
+    for category in categories:
+        input_cat_dir = input_base_dir / category
+        output_cat_dir = output_base_dir / category
+        
+        # Buat folder output jika belum ada (misal: data/results/high)
+        output_cat_dir.mkdir(parents=True, exist_ok=True)
+        
+        if not input_cat_dir.exists():
+            print(f"[SKIP] Folder tidak ditemukan: {input_cat_dir}")
+            continue
+
+        # Ambil semua file gambar (.png, .jpg) di dalam folder kategori
+        image_files = list(input_cat_dir.glob("*.png")) + list(input_cat_dir.glob("*.jpg"))
+        
+        print(f"\n--- Memproses Kategori: {category.upper()} ({len(image_files)} gambar) ---")
+
+        # 3. Looping per Gambar
+        for img_path in image_files:
+            file_name_awal = img_path.stem  # Mengambil nama file tanpa ekstensi (cth: I04_04_01)
+            
+            # Baca Gambar
+            img_bgr = cv2.imread(str(img_path), cv2.IMREAD_COLOR)
+            if img_bgr is None:
+                print(f"  [ERROR] Gagal membaca {img_path.name}")
+                continue
+            img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+            print(f"  -> Mengevaluasi: {img_path.name} ... ", end="")
+
+            try:
+                # --- A. Mengukur Waktu Enkripsi & Dekripsi ---
+                start_time = time.time()
+                cipher_1, _ = encrypt_baseline(img_rgb, K, cfg=cfg, return_debug=False)
+                t_enc = time.time() - start_time
+
+                start_time = time.time()
+                decrypted = decrypt_baseline(cipher_1, K, cfg=cfg)
+                t_dec = time.time() - start_time
+
+                # --- B. Memverifikasi Lossless ---
+                is_lossless = verify_lossless(img_rgb, decrypted)
+
+                # --- C. Persiapan NPCR/UACI (Ubah 1 piksel pada Red Channel plaintext) ---
+                img_rgb_modified = img_rgb.copy()
+                # menggunakan operasi XOR (^) untuk membalik bit terakhir
+                # menghindari overflow
+                pixel_awal = int(img_rgb_modified[0, 0, 0])
+                img_rgb_modified[0, 0, 0] = pixel_awal ^ 1
+                
+                cipher_2, _ = encrypt_baseline(img_rgb_modified, K, cfg=cfg, return_debug=False)
+
+                # --- D. Menghitung Metrik Keamanan (Fokus Channel R untuk evaluasi) ---
+                R_channel = cipher_1[:, :, 0]
+                R_channel_modified = cipher_2[:, :, 0]
+
+                entropy = calculate_entropy(R_channel)
+                corr = calculate_correlation(R_channel)
+                npcr, uaci = calculate_npcr_uaci(R_channel, R_channel_modified)
+
+                # --- E. Menyimpan Data ke Dictionary ---
+                data_row = {
+                    "File Name": img_path.name,
+                    "Category": category,
+                    "Entropy": round(entropy, 5),
+                    "Corr_Horizontal": round(corr['horizontal'], 5),
+                    "Corr_Vertical": round(corr['vertical'], 5),
+                    "Corr_Diagonal": round(corr['diagonal'], 5),
+                    "NPCR (%)": round(npcr, 5),
+                    "UACI (%)": round(uaci, 5),
+                    "Enc_Time (s)": round(t_enc, 4),
+                    "Dec_Time (s)": round(t_dec, 4),
+                    "Lossless": is_lossless
+                }
+
+                # Simpan ke Master List
+                all_results.append(data_row)
+
+                # 4. Export CSV Spesifik per Gambar
+                # Format: data/results/high/result.I04_04_01.csv
+                df_single = pd.DataFrame([data_row])
+                out_csv_path = output_cat_dir / f"result.{file_name_awal}.csv"
+                df_single.to_csv(out_csv_path, index=False)
+
+                print("Selesai")
+
+            except Exception as e:
+                print(f"GAGAL ({e})")
+
+    # 5. Membuat File Rekapitulasi Master
+    if all_results:
+        df_master = pd.DataFrame(all_results)
+        master_csv_path = output_base_dir / "summary_all_results.csv"
+        df_master.to_csv(master_csv_path, index=False)
+        print(f"\n=== SELESAI! ===")
+        print(f"Tabel Rekapitulasi Master tersimpan di: {master_csv_path}")
+    else:
+        print("\n[WARNING] Tidak ada data yang berhasil dievaluasi.")
+
+if __name__ == "__main__":
+    main()

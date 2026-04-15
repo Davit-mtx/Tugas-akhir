@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I62_12_04.png,medium,0.000219,3.99,0.00987,1582,764,7.99905,0.0003,0.00035,-0.0003,99.15365,33.45673,0.4708,0.4156,511.88,True

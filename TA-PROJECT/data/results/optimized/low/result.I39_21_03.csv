@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I39_21_03.png,low,0.00011,3.95032,0.04958,2000,992,7.99906,7e-05,-0.00022,-1e-05,99.39067,33.56744,0.4258,0.4234,511.74,True

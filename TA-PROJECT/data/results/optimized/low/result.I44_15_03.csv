@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I44_15_03.png,low,0.000154,3.94213,0.01566,1889,10,7.99904,-0.00049,-5e-05,-4e-05,98.92985,33.42356,0.4204,0.4413,506.9,True

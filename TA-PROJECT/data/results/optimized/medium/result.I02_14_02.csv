@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I02_14_02.png,medium,0.000206,3.5,0.05,100,24,7.99913,-0.00054,-0.00013,0.00024,98.75641,33.32983,0.4025,0.4126,514.86,True

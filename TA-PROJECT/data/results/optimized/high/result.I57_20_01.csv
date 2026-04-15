@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I57_20_01.png,high,0.0002,3.5,0.00067,100,10,7.99903,7e-05,0.00038,0.00039,99.00564,33.53807,0.456,0.4211,517.76,True

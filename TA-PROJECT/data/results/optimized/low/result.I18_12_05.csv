@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I18_12_05.png,low,0.000177,3.9515,0.0484,100,10,7.99903,0.00034,0.00033,3e-05,98.94714,33.47656,0.4113,0.4112,509.02,True

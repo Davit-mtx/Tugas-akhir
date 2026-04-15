@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I53_21_03.png,medium,0.00015,3.5,0.05,100,10,7.99906,0.00011,-0.00025,-0.00018,98.8917,33.40226,0.4149,0.4248,513.41,True

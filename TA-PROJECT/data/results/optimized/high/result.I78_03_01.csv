@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I78_03_01.png,high,0.000253,3.5,0.02078,1876,804,7.99914,0.00011,-0.00053,0.00055,99.34489,33.48805,0.4177,0.4165,514.56,True

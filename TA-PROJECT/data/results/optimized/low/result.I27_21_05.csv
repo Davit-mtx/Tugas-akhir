@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I27_21_05.png,low,0.000156,3.5,0.00434,100,480,7.99907,0.00038,-0.00017,-3e-05,99.17653,33.4755,0.4001,0.413,507.24,True

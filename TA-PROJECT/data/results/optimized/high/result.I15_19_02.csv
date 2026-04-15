@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I15_19_02.png,high,0.000185,3.5,0.0001,412,361,7.99905,-0.00015,-0.00024,-0.00036,99.06006,33.37998,0.4202,0.4198,513.5,True

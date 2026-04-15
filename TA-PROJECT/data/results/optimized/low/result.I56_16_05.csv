@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I56_16_05.png,low,0.000239,3.9541,0.0458,954,463,7.99899,-0.00059,-0.00015,0.00032,98.9507,33.50125,0.4088,0.4149,508.61,True

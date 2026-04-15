@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I57_16_03.png,medium,0.000181,3.97322,0.00161,174,83,7.99907,-0.00018,-0.00035,0.0002,98.98733,33.50778,0.4184,0.4332,516.17,True

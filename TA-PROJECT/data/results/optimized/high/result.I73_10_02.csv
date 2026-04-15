@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I73_10_02.png,high,0.000158,3.699,0.04975,224,57,7.99909,-7e-05,-0.00047,7e-05,98.80473,33.47107,0.4217,0.4236,514.98,True

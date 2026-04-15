@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I75_07_01.png,medium,0.000143,3.5,0.00106,928,10,7.99912,0.00034,-2e-05,-0.00016,99.00208,33.4111,0.4054,0.4075,511.89,True

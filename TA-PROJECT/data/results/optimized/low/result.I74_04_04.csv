@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I74_04_04.png,low,0.000149,3.95339,0.04651,601,245,7.99911,0.00014,0.00038,-4e-05,98.53821,33.47622,0.4003,0.4093,507.03,True

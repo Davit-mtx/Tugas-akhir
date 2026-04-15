@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I60_25_03.png,high,0.000131,3.84288,0.01423,200,60,7.99916,-9e-05,0.00011,0.00026,98.7737,33.44456,0.4232,0.4438,516.65,True

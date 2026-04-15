@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I05_13_02.png,medium,0.000119,3.94993,0.04997,124,23,7.99909,-9e-05,4e-05,-0.00025,99.05548,33.45636,0.4148,0.4192,515.42,True

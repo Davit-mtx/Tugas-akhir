@@ -184,7 +184,7 @@ def run_ho(SearchAgents, Max_iterations, lowerbound, upperbound, fitness_func):
                 
         # Simpan Best So Far
         HO_curve[t-1] = fbest
-        print(f"[HO] Iterasi {t}/{Max_iterations} | Best Fitness: {fbest:.6f}")
+        # print(f"[HO] Iterasi {t}/{Max_iterations} | Best Fitness: {fbest:.6f}")
 
     eval_time = time.time() - start_time
     print(f"\n[SELESAI] Optimasi selesai dalam {eval_time:.2f} detik.")

@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I76_24_02.png,low,0.00016,3.98911,0.01079,1446,783,7.99922,0.00014,0.00033,-0.0002,99.36879,33.46456,0.4122,0.4061,509.11,True

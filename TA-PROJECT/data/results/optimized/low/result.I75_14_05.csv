@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I75_14_05.png,low,0.000224,3.9735,0.00035,100,10,7.99906,-0.00016,0.00049,-0.00034,99.32658,33.51092,0.4074,0.4162,511.34,True

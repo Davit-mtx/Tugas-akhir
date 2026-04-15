@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I33_14_03.png,low,0.000154,3.5,0.0001,399,192,7.99916,-0.00014,-0.00043,4e-05,99.19891,33.51928,0.4172,0.4154,510.6,True

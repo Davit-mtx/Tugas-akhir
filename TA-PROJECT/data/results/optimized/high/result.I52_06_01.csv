@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I52_06_01.png,high,0.000212,3.5,0.02223,100,43,7.99901,-0.00022,0.00054,0.00015,98.74064,33.46642,0.4057,0.4085,515.35,True

@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I19_25_05.png,medium,0.000171,3.72163,0.05,149,33,7.99907,0.00035,0.00024,9e-05,98.93036,33.58556,0.4131,0.418,513.22,True

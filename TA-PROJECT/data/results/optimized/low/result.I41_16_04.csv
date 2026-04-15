@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I41_16_04.png,low,0.000182,3.98809,0.01181,1198,517,7.99914,0.00021,0.00034,0.00022,99.22282,33.42524,0.4027,0.4102,507.89,True

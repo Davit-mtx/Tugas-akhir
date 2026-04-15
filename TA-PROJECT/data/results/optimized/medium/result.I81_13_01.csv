@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I81_13_01.png,medium,0.000199,3.97418,0.02572,271,10,7.99901,-0.00038,0.00035,9e-05,98.89679,33.43135,0.4109,0.4063,508.39,True

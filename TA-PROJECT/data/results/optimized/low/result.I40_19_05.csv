@@ -1,0 +1,2 @@
+File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
+I40_19_05.png,low,0.000201,3.62318,0.00151,157,41,7.99899,-0.0002,-0.00027,0.00036,99.26605,33.47751,0.4142,0.4139,508.51,True

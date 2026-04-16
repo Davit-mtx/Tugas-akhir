@@ -79,27 +79,27 @@ def _circular_shift_cols(mat: np.ndarray, shifts: np.ndarray) -> np.ndarray:
 
 def split_key_128hex_to_subkeys(K_hex: str) -> np.ndarray:
     """
-    Input: K_hex string heksadesimal 128-bit (32 hex chars).
-    Output: Km_dec array shape (8,), masing-masing integer 0..255 (2 hex digits per subkey).
-
-    Rumus penting:
-    Km = 16 * Km(1) + Km(2)
-    di mana Km(1), Km(2) adalah digit hex (0..15).
+    Membaca seluruh 128-bit kunci dan melipatnya (XOR) menjadi 8 subkey.
+    Memastikan efek avalanche : perubahan 1 bit di ujung manapun akan merubah subkey
     """
     K_hex = K_hex.strip().lower().replace("0x", "")
     if len(K_hex) != 32:
         raise ValueError("K_hex harus 32 karakter hex (128-bit).")
 
+    # Ambil seluruh 16 byte (32 karakter)
+    bytess_array = [int(K_hex[i:i+2], 16) for i in range(0, 32, 2)]
+
+    # lipat 16 byte menjadi 8 byte menggunakan operasi bitwise XOR
     subkeys = []
-    for m in range(0, 16, 2):  # 16 pasangan hex? (32 hex char => 16 byte)
-        byte_hex = K_hex[m:m+2]
-        subkeys.append(int(byte_hex, 16))
+    for m in range(8):  # 16 pasangan hex? (32 hex char => 16 byte)
+        folded_byte = bytes_array[i] ^ bytes_array[i+8]
+        subkeys.append(folded_byte)
 
     # Paper/proposal kamu membagi jadi 8 sub-kunci K_m (masing-masing 2 hex).
     # Jika definisimu memang 8 subkey, biasanya diambil 8 byte pertama/tertentu.
     # Di banyak implementasi: K dibagi jadi 8 bagian, tiap bagian 2 hex (1 byte) => 8 byte.
     # Jadi kita ambil 8 byte pertama:
-    Km_dec = np.array(subkeys[:8], dtype=np.int64)
+    Km_dec = np.array(subkeys, dtype=np.int64)
     return Km_dec
 
 
@@ -357,7 +357,15 @@ def build_S1_S2_S3(K_hex: str, cfg: BaselineConfig, H_: int, W_: int) -> Tuple[n
     """
     # Seed deterministik dari key
     K_hex_clean = K_hex.strip().lower().replace("0x", "")
-    seed_int = int(K_hex_clean[:8], 16)  # ambil 32-bit awal
+
+    # Pecah kunci menjadi 4 block (masing-masing 8 karakter / 32-bit)
+    block1 = int(K_hex_clean[0:8], 16)
+    block2 = int(K_hex_clean[8:16], 16)
+    block3 = int(K_hex_clean[16:24], 16)
+    block4 = int(K_hex_clean[24:32], 16)
+
+    # XOR-kan seluruh blok agar setiap bit berpartisipasi membentuk seed
+    seed_int = block1 ^ block2 ^ block3 ^ block4  
     x0 = ((seed_int % 10_000_000) + 1) / 10_000_001.0  # (0,1)
 
     # Panjang total yang dibutuhkan (aman)

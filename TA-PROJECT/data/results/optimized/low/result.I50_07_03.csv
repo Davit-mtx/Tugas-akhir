@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I50_07_03.png,low,0.000289,3.5,0.00316,264,10,7.99888,0.00061,0.00018,-0.00053,98.97359,33.44348,0.4207,0.4105,511.24,True

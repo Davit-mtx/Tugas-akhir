@@ -101,6 +101,9 @@ def main():
 
         # Eksekusi Dekripsi Silang (C1 didekripsi pakai K2)
         wrong_dec = decrypt_baseline(C1, K2_HEX, cfg=opt_cfg)
+
+        # Dekripsi Benar (C1 didekripsi pakai K1 -> Pasti Berhasil)
+        correct_dec = decrypt_baseline(C1, K1_HEX, cfg=opt_cfg)
         
         # Simpan 4 gambar bukti fisik ke folder appendix
         base_name = img_path.stem
@@ -108,7 +111,10 @@ def main():
         cv2.imwrite(str(out_sens_dir / f"{cat}_{base_name}_2_Cipher_K1.png"), cv2.cvtColor(C1, cv2.COLOR_RGB2BGR))
         cv2.imwrite(str(out_sens_dir / f"{cat}_{base_name}_3_Cipher_K2.png"), cv2.cvtColor(C2, cv2.COLOR_RGB2BGR))
         cv2.imwrite(str(out_sens_dir / f"{cat}_{base_name}_4_Dec_Wrong.png"), cv2.cvtColor(wrong_dec, cv2.COLOR_RGB2BGR))
-        print(f"   [Selesai] 4 Bukti gambar disimpan ke data/results/appendix/")
+
+        # --- TAMBAHKAN BARIS INI: Simpan Hasil Dekripsi Benar ---
+        cv2.imwrite(str(out_sens_dir / f"{cat}_{base_name}_5_Dec_Correct.png"), cv2.cvtColor(correct_dec, cv2.COLOR_RGB2BGR))
+        print(f"   [Selesai] 5 Bukti gambar disimpan ke data/results/appendix/")
 
     # Simpan rekap juara
     pd.DataFrame(top_performers).to_csv(out_sens_dir / "top_performers_rekapan.csv", index=False)

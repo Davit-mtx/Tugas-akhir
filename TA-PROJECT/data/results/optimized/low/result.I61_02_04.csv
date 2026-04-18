@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I61_02_04.png,low,0.000109,3.5,0.02813,100,10,7.99912,-0.00014,5e-05,-0.00013,98.8795,33.42968,0.4151,0.4317,508.56,True

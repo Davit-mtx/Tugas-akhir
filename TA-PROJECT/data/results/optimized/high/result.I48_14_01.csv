@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I48_14_01.png,high,0.00021,3.96385,0.03605,613,472,7.99905,-8e-05,-0.00074,7e-05,99.1628,33.57168,0.4101,0.4176,520.24,True

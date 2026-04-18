@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I73_03_03.png,medium,0.000174,3.5,0.05,100,44,7.99909,-9e-05,-0.00027,-0.00034,98.91103,33.42372,0.4314,0.4271,510.04,True

@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I27_17_04.png,high,0.000133,3.95901,0.04089,1432,436,7.99908,-0.00025,-3e-05,-0.00018,99.2335,33.41868,0.4428,0.4184,517.3,True

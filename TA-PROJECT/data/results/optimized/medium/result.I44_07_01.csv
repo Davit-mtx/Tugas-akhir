@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I44_07_01.png,medium,0.00018,3.50622,0.00073,124,23,7.99903,0.00012,0.00049,-0.00011,98.94765,33.4232,0.4145,0.4214,516.7,True

@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I26_05_01.png,high,0.000151,3.5,0.02263,415,10,7.99912,-0.00021,9e-05,0.00027,99.57733,33.43539,0.4193,0.4216,514.43,True

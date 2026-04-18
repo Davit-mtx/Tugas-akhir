@@ -87,12 +87,12 @@ def split_key_128hex_to_subkeys(K_hex: str) -> np.ndarray:
         raise ValueError("K_hex harus 32 karakter hex (128-bit).")
 
     # Ambil seluruh 16 byte (32 karakter)
-    bytess_array = [int(K_hex[i:i+2], 16) for i in range(0, 32, 2)]
+    bytes_array = [int(K_hex[i:i+2], 16) for i in range(0, 32, 2)]
 
     # lipat 16 byte menjadi 8 byte menggunakan operasi bitwise XOR
     subkeys = []
     for m in range(8):  # 16 pasangan hex? (32 hex char => 16 byte)
-        folded_byte = bytes_array[i] ^ bytes_array[i+8]
+        folded_byte = bytes_array[m] ^ bytes_array[m+8]
         subkeys.append(folded_byte)
 
     # Paper/proposal kamu membagi jadi 8 sub-kunci K_m (masing-masing 2 hex).

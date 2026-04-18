@@ -1,4 +1,3 @@
-
 import sys
 import time
 from pathlib import Path
@@ -14,11 +13,15 @@ from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConf
 from src.metrics.metric import calculate_entropy, calculate_correlation, calculate_npcr_uaci, verify_lossless
 
 def main():
-    print("=== MEMULAI EVALUASI MASSAL (MASS EVALUATION) ===")
+    print("=== MEMULAI EVALUASI MASSAL (MASS EVALUATION) DENGAN PENYIMPANAN FISIK ===")
     
     # 1. Setup Direktori Input dan Output
     input_base_dir = PROJECT_ROOT / "data/samples_30_per_class"
     output_base_dir = PROJECT_ROOT / "data/results"
+    
+    # === TAMBAHAN 1: Definisi Rute Folder Fisik ===
+    out_enc_base_dir = PROJECT_ROOT / "data/results/baseline/enkripsi"
+    out_dec_base_dir = PROJECT_ROOT / "data/results/baseline/dekripsi"
     
     categories = ['high', 'medium', 'low']
     K = "00112233445566778899aabbccddeeff"
@@ -32,8 +35,12 @@ def main():
         input_cat_dir = input_base_dir / category
         output_cat_dir = output_base_dir / category
         
-        # Buat folder output jika belum ada (misal: data/results/high)
-        output_cat_dir.mkdir(parents=True, exist_ok=True)
+        # # Buat folder output CSV jika belum ada
+        # output_cat_dir.mkdir(parents=True, exist_ok=True)
+        
+        # === TAMBAHAN 2: Buat Sub-folder Fisik per Kategori ===
+        (out_enc_base_dir / category).mkdir(parents=True, exist_ok=True)
+        (out_dec_base_dir / category).mkdir(parents=True, exist_ok=True)
         
         if not input_cat_dir.exists():
             print(f"[SKIP] Folder tidak ditemukan: {input_cat_dir}")
@@ -55,7 +62,7 @@ def main():
                 continue
             img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-            print(f"  -> Mengevaluasi: {img_path.name} ... ", end="")
+            print(f"  -> Mengevaluasi & Menyimpan: {img_path.name} ... ", end="", flush=True)
 
             try:
                 # --- A. Mengukur Waktu Enkripsi & Dekripsi ---
@@ -67,13 +74,15 @@ def main():
                 decrypted = decrypt_baseline(cipher_1, K, cfg=cfg)
                 t_dec = time.time() - start_time
 
+                # === TAMBAHAN 3: Simpan Gambar Fisik (Konversi RGB ke BGR) ===
+                cv2.imwrite(str(out_enc_base_dir / category / img_path.name), cv2.cvtColor(cipher_1, cv2.COLOR_RGB2BGR))
+                cv2.imwrite(str(out_dec_base_dir / category / img_path.name), cv2.cvtColor(decrypted, cv2.COLOR_RGB2BGR))
+
                 # --- B. Memverifikasi Lossless ---
                 is_lossless = verify_lossless(img_rgb, decrypted)
 
                 # --- C. Persiapan NPCR/UACI (Ubah 1 piksel pada Red Channel plaintext) ---
                 img_rgb_modified = img_rgb.copy()
-                # menggunakan operasi XOR (^) untuk membalik bit terakhir
-                # menghindari overflow
                 pixel_awal = int(img_rgb_modified[0, 0, 0])
                 img_rgb_modified[0, 0, 0] = pixel_awal ^ 1
                 
@@ -105,11 +114,10 @@ def main():
                 # Simpan ke Master List
                 all_results.append(data_row)
 
-                # 4. Export CSV Spesifik per Gambar
-                # Format: data/results/high/result.I04_04_01.csv
-                df_single = pd.DataFrame([data_row])
-                out_csv_path = output_cat_dir / f"result.{file_name_awal}.csv"
-                df_single.to_csv(out_csv_path, index=False)
+                # # 4. Export CSV Spesifik per Gambar
+                # df_single = pd.DataFrame([data_row])
+                # out_csv_path = output_cat_dir / f"result.{file_name_awal}.csv"
+                # df_single.to_csv(out_csv_path, index=False)
 
                 print("Selesai")
 
@@ -119,9 +127,10 @@ def main():
     # 5. Membuat File Rekapitulasi Master
     if all_results:
         df_master = pd.DataFrame(all_results)
-        master_csv_path = output_base_dir / "summary_all_results.csv"
+        master_csv_path = output_base_dir / "baseline/summary_all_results.csv"
         df_master.to_csv(master_csv_path, index=False)
         print(f"\n=== SELESAI! ===")
+        print(f"Gambar fisik tersimpan di: {out_enc_base_dir} dan {out_dec_base_dir}")
         print(f"Tabel Rekapitulasi Master tersimpan di: {master_csv_path}")
     else:
         print("\n[WARNING] Tidak ada data yang berhasil dievaluasi.")

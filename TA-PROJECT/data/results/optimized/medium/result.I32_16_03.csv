@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I32_16_03.png,medium,0.000155,3.99,0.00032,145,386,7.99916,-8e-05,2e-05,0.00051,99.27572,33.45485,0.4121,0.4133,514.8,True

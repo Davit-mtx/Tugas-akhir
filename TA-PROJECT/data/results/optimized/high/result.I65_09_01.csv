@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I65_09_01.png,high,0.000145,3.5,0.01451,178,61,7.99894,0.00015,-8e-05,0.00024,98.85254,33.4454,0.4179,0.4223,514.31,True

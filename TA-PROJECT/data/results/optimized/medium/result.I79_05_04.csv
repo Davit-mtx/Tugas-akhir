@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I79_05_04.png,medium,0.000127,3.5,0.00607,1858,87,7.99898,-0.0001,0.0001,-0.00018,99.17755,33.47724,0.4112,0.4089,509.09,True

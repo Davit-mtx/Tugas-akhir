@@ -4,6 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Setup Path agar folder src/ terbaca
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -19,7 +20,11 @@ def main():
     
     # 1. Setup Direktori Input dan Output
     input_base_dir = PROJECT_ROOT / "data/samples_30_per_class"
-    output_base_dir = PROJECT_ROOT / "data/results/optimized" # Folder khusus hasil optimasi
+    output_base_dir = PROJECT_ROOT / "data/results/optimized" 
+    
+    # Rute Folder Fisik Gambar Optimized
+    out_enc_opt_dir = output_base_dir / "enkripsi"
+    out_dec_opt_dir = output_base_dir / "dekripsi"
     
     categories = ['high', 'medium', 'low']
     K_HEX = "00112233445566778899aabbccddeeff"
@@ -28,20 +33,22 @@ def main():
     lb = [3.5, 0.0001, 100, 10]
     ub = [3.99, 0.05, 2000, 1000]
 
-    # Konfigurasi HO (Ubah jika Anda akan melakukan running semalaman)
+    # Konfigurasi HO
     SearchAgents = 10
     Max_iterations = 20
 
     print(f"Konfigurasi HO: {SearchAgents} Agen, {Max_iterations} Iterasi per gambar.\n")
 
     all_results = []
+    all_ho_curves = [] # Menampung kurva konvergensi dari semua gambar
 
     # 2. Looping per Kategori
     for category in categories:
         input_cat_dir = input_base_dir / category
-        output_cat_dir = output_base_dir / category
         
-        output_cat_dir.mkdir(parents=True, exist_ok=True)
+        # Buat Sub-folder Fisik per Kategori untuk gambar
+        (out_enc_opt_dir / category).mkdir(parents=True, exist_ok=True)
+        (out_dec_opt_dir / category).mkdir(parents=True, exist_ok=True)
         
         if not input_cat_dir.exists():
             continue
@@ -51,13 +58,12 @@ def main():
 
         # 3. Looping per Gambar
         for idx, img_path in enumerate(image_files, 1):
-            file_name_awal = img_path.stem
             
             img_bgr = cv2.imread(str(img_path))
             if img_bgr is None: continue
             img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-            print(f"  [{idx}/{len(image_files)}] Optimasi: {img_path.name} ... ", end="", flush=True)
+            print(f"  [{idx}/{len(image_files)}] Optimasi & Menyimpan: {img_path.name} ... ", end="", flush=True)
 
             try:
                 # --- A. Jalankan HO untuk mencari parameter X terbaik ---
@@ -65,8 +71,11 @@ def main():
                     return evaluate_fitness(img_rgb, K_HEX, X)
 
                 start_opt_time = time.time()
-                best_score, best_pos, _ = run_ho(SearchAgents, Max_iterations, lb, ub, objective_function)
+                # Tangkap ho_curve untuk dirata-ratakan nanti
+                best_score, best_pos, ho_curve = run_ho(SearchAgents, Max_iterations, lb, ub, objective_function)
                 opt_time = time.time() - start_opt_time
+                
+                all_ho_curves.append(ho_curve)
 
                 # Susun objek konfigurasi dari hasil HO
                 opt_cfg = BaselineConfig(
@@ -77,7 +86,6 @@ def main():
                 )
 
                 # --- B. Evaluasi Final Menggunakan Parameter Terbaik ---
-                # Mengukur Waktu Enkripsi & Dekripsi
                 start_time = time.time()
                 cipher_opt, _ = encrypt_baseline(img_rgb, K_HEX, cfg=opt_cfg, return_debug=False)
                 t_enc = time.time() - start_time
@@ -85,6 +93,10 @@ def main():
                 start_time = time.time()
                 decrypted = decrypt_baseline(cipher_opt, K_HEX, cfg=opt_cfg)
                 t_dec = time.time() - start_time
+                
+                # --- Simpan Gambar Fisik (Konversi RGB ke BGR) ---
+                cv2.imwrite(str(out_enc_opt_dir / category / img_path.name), cv2.cvtColor(cipher_opt, cv2.COLOR_RGB2BGR))
+                cv2.imwrite(str(out_dec_opt_dir / category / img_path.name), cv2.cvtColor(decrypted, cv2.COLOR_RGB2BGR))
 
                 # Validasi Lossless
                 is_lossless = verify_lossless(img_rgb, decrypted)
@@ -125,23 +137,38 @@ def main():
                 }
 
                 all_results.append(data_row)
-
-                # Export CSV Spesifik
-                df_single = pd.DataFrame([data_row])
-                out_csv_path = output_cat_dir / f"result.{file_name_awal}.csv"
-                df_single.to_csv(out_csv_path, index=False)
-
                 print(f"Selesai (Fit: {best_score:.4f}, Entropi: {entropy:.4f})")
 
             except Exception as e:
                 print(f"GAGAL ({e})")
 
-    # 4. Membuat File Rekapitulasi Master
+    # 4. Membuat File Rekapitulasi Master & Grafik
     if all_results:
+        # Ekspor CSV
         df_master = pd.DataFrame(all_results)
         master_csv_path = output_base_dir / "summary_optimized_results.csv"
         df_master.to_csv(master_csv_path, index=False)
+        
+        # Cetak Grafik Rata-Rata Konvergensi
+        if all_ho_curves:
+            # Rata-rata dari seluruh array curve secara vertikal (axis=0)
+            avg_curve = np.mean(all_ho_curves, axis=0)
+            
+            plt.figure(figsize=(8, 6))
+            plt.plot(avg_curve, color='#b28d90', linewidth=2, label='Rata-Rata HO')
+            plt.title("Rata-Rata Kurva Konvergensi HO (Seluruh Citra)")
+            plt.xlabel("Iterasi")
+            plt.ylabel("Rata-Rata Skor Fitness Terbaik")
+            plt.grid(True, linestyle='--', alpha=0.7)
+            plt.legend()
+            
+            plot_path = output_base_dir / "average_convergence_curve.png"
+            plt.savefig(plot_path, dpi=300)
+            plt.close()
+            
         print(f"\n=== SELESAI! ===")
+        print(f"Gambar terenkripsi & terdekripsi tersimpan di: {out_enc_opt_dir} & {out_dec_opt_dir}")
+        print(f"Grafik Konvergensi Rata-Rata tersimpan di: {plot_path}")
         print(f"Tabel Master Evaluasi Optimasi tersimpan di: {master_csv_path}")
 
 if __name__ == "__main__":

@@ -1,2 +1,0 @@
-File Name,Category,Best_Fitness,Opt_r_min,Opt_eps,Opt_T0,Opt_Q,Entropy,Corr_Horizontal,Corr_Vertical,Corr_Diagonal,NPCR (%),UACI (%),Enc_Time (s),Dec_Time (s),HO_Time (s),Lossless
-I39_10_02.png,high,0.000194,3.5,0.00124,100,10,7.9993,0.00068,-5e-05,0.00017,98.93646,33.44145,0.87,0.4554,1134.17,True

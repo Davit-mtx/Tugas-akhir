@@ -1,0 +1,118 @@
+
+import sys
+from pathlib import Path
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Setup Path
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# Set style grafik untuk standar publikasi/skripsi
+plt.style.use('seaborn-v0_8-whitegrid')
+sns.set_context("paper", font_scale=1.2)
+
+def main():
+    print("=== MENGANALISIS PENGARUH DMOS (TUJUAN 4) ===\n")
+
+    opt_csv_path = PROJECT_ROOT / "data/results/optimized/summary_optimized_results.csv"
+    out_dir = PROJECT_ROOT / "data/results/plots/dmos_analysis"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if not opt_csv_path.exists():
+        print("[ERROR] File summary_optimized_results.csv tidak ditemukan!")
+        return
+
+    # 1. Load Data
+    df = pd.read_csv(opt_csv_path)
+    
+    # Pastikan urutan kategori benar (High -> Medium -> Low)
+    kategori_urutan = ['high', 'medium', 'low']
+    df['Category'] = pd.Categorical(df['Category'], categories=kategori_urutan, ordered=True)
+    
+    # Pemetaan label untuk grafik (KADID-10k: High = Bagus/DMOS Rendah, Low = Rusak/DMOS Tinggi)
+    label_map = {'high': 'High (Bagus)', 'medium': 'Medium', 'low': 'Low (Rusak)'}
+    df['Label'] = df['Category'].map(label_map)
+
+    # 2. EKSTRAK TABEL STATISTIK UNTUK BAB 4
+    print("-> Menghitung tabel statistik...")
+    stat_summary = df.groupby('Category').agg({
+        'Opt_r_min': ['mean', 'std'],
+        'Opt_eps': ['mean', 'std'],
+        'Opt_T0': ['mean', 'std'],
+        'Opt_Q': ['mean', 'std'],
+        'Entropy': ['mean', 'std'],
+        'NPCR (%)': ['mean', 'std']
+    }).round(5)
+    
+    stat_csv_path = out_dir / "dmos_statistical_summary.csv"
+    stat_summary.to_csv(stat_csv_path)
+    print(f"   [OK] Tabel statistik disimpan di: {stat_csv_path.name}")
+
+    # ==========================================
+    # VISUALISASI 1: Parameter Chaos (r_min & eps)
+    # ==========================================
+    print("-> Membuat grafik persebaran parameter Chaos...")
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    
+    sns.boxplot(data=df, x='Label', y='Opt_r_min', ax=axes[0], palette="Blues")
+    axes[0].set_title('Distribusi Parameter r_min berdasarkan Kualitas Citra')
+    axes[0].set_ylabel('Nilai r_min Teroptimasi')
+    axes[0].set_xlabel('Kategori Kualitas (DMOS)')
+
+    sns.boxplot(data=df, x='Label', y='Opt_eps', ax=axes[1], palette="Greens")
+    axes[1].set_title('Distribusi Parameter Epsilon berdasarkan Kualitas Citra')
+    axes[1].set_ylabel('Nilai Epsilon Teroptimasi')
+    axes[1].set_xlabel('Kategori Kualitas (DMOS)')
+
+    plt.tight_layout()
+    plt.savefig(out_dir / "1_Chaos_Parameters_DMOS.png", dpi=300)
+    plt.close()
+
+    # ==========================================
+    # VISUALISASI 2: Beban Iterasi (T0 & Q)
+    # ==========================================
+    print("-> Membuat grafik beban komputasi (Iterasi)...")
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    
+    sns.boxplot(data=df, x='Label', y='Opt_T0', ax=axes[0], palette="Oranges")
+    axes[0].set_title('Distribusi Iterasi Transient (T0) berdasarkan Kualitas Citra')
+    axes[0].set_ylabel('Jumlah Iterasi (T0)')
+    axes[0].set_xlabel('Kategori Kualitas (DMOS)')
+
+    sns.boxplot(data=df, x='Label', y='Opt_Q', ax=axes[1], palette="Purples")
+    axes[1].set_title('Distribusi Faktor Kuantisasi (Q) berdasarkan Kualitas Citra')
+    axes[1].set_ylabel('Nilai Q')
+    axes[1].set_xlabel('Kategori Kualitas (DMOS)')
+
+    plt.tight_layout()
+    plt.savefig(out_dir / "2_Iteration_Parameters_DMOS.png", dpi=300)
+    plt.close()
+
+    # ==========================================
+    # VISUALISASI 3: Konsistensi Keamanan (Entropy)
+    # ==========================================
+    print("-> Membuat grafik konsistensi keamanan...")
+    plt.figure(figsize=(8, 6))
+    
+    # Menggunakan stripplot + violinplot untuk melihat persebaran detail
+    sns.violinplot(data=df, x='Label', y='Entropy', inner=None, color=".8", alpha=0.5)
+    sns.stripplot(data=df, x='Label', y='Entropy', size=6, jitter=True, palette="Dark2", alpha=0.7)
+    
+    plt.title('Konsistensi Keamanan (Entropi) Lintas Kualitas Citra')
+    plt.ylabel('Skor Entropi (Mendekati 8 = Sempurna)')
+    plt.xlabel('Kategori Kualitas (DMOS)')
+    
+    # Garis target teoretis
+    plt.axhline(y=7.9990, color='r', linestyle='--', alpha=0.5, label='Target > 7.999')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(out_dir / "3_Security_Consistency_DMOS.png", dpi=300)
+    plt.close()
+
+    print("\n=== SELESAI! ===")
+    print(f"Semua grafik dan tabel untuk Tujuan 4 telah disimpan di: {out_dir}")
+
+if __name__ == "__main__":
+    main()

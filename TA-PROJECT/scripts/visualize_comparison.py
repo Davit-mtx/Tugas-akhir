@@ -15,7 +15,7 @@ sns.set_context("paper", font_scale=1.2)
 def main():
     print("=== MEMBUAT GRAFIK KOMPARASI BASELINE VS HO ===\n")
 
-    baseline_csv = PROJECT_ROOT / "data/results/summary_all_results.csv"
+    baseline_csv = PROJECT_ROOT / "data/results/baseline/summary_all_results.csv"
     optimized_csv = PROJECT_ROOT / "data/results/optimized/summary_optimized_results.csv"
     out_dir = PROJECT_ROOT / "data/results/plots"
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -15,7 +15,7 @@ from src.metrics.metric import calculate_npcr_uaci, calculate_correlation
 def main():
     print("=== ANALISIS KOMPREHENSIF TUJUAN 3: BASELINE vs OPTIMASI HO ===\n")
 
-    baseline_csv = PROJECT_ROOT / "data/results/summary_all_results.csv"
+    baseline_csv = PROJECT_ROOT / "data/results/baseline/summary_all_results.csv"
     optimized_csv = PROJECT_ROOT / "data/results/optimized/summary_optimized_results.csv"
 
     if not baseline_csv.exists() or not optimized_csv.exists():

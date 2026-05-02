@@ -146,7 +146,7 @@ def main():
     if all_results:
         # Ekspor CSV
         df_master = pd.DataFrame(all_results)
-        master_csv_path = output_base_dir / "summary_optimized_results.csv"
+        master_csv_path = output_base_dir / "optimized/summary_optimized_results.csv"
         df_master.to_csv(master_csv_path, index=False)
         
         # Cetak Grafik Rata-Rata Konvergensi
@@ -162,7 +162,7 @@ def main():
             plt.grid(True, linestyle='--', alpha=0.7)
             plt.legend()
             
-            plot_path = output_base_dir / "average_convergence_curve.png"
+            plot_path = output_base_dir / "optimized/average_convergence_curve.png"
             plt.savefig(plot_path, dpi=300)
             plt.close()
             

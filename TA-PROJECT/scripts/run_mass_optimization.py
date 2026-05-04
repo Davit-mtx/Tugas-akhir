@@ -146,7 +146,7 @@ def main():
     if all_results:
         # Ekspor CSV
         df_master = pd.DataFrame(all_results)
-        master_csv_path = output_base_dir / "optimized/summary_optimized_results.csv"
+        master_csv_path = output_base_dir / "summary_optimized_results.csv"
         df_master.to_csv(master_csv_path, index=False)
         
         # Cetak Grafik Rata-Rata Konvergensi

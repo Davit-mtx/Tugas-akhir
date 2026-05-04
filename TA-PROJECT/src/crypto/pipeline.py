@@ -30,7 +30,7 @@ import numpy as np
 @dataclass(frozen=True)
 class BaselineConfig:
     r_min: float = 3.70
-    eps: float = 0.002
+    eps: float = 0.02
     T0: int = 500
     Q: int = 256
 
@@ -424,54 +424,6 @@ def _add_mod256(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     return ((a.astype(np.uint16) + b.astype(np.uint16)) % 256).astype(np.uint8)
 
-# =========================================================
-#% 6) Diffusion: placeholder (HARUS kamu samakan dengan proposalmu)
-# =========================================================
-
-#! salah dan masih sebagai backup
-# def diffusion_placeholder(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
-#     """
-#     WARNING:
-#     Diffusion adalah bagian yang paling sering berbeda detailnya.
-#     Di proposal kamu ada "multi-arah + XOR/mod 256" dan dikendalikan S2.
-#     Karena rumus persisnya belum kamu paste di sini, saya buat diffusion minimal deterministik:
-
-#     - Flatten P menjadi 1D row-major.
-#     - Scan forward: y[i] = (x[i] XOR S2[i]) XOR y[i-1]
-#     - Lalu scan backward: y[i] = (y[i] XOR S2[i]) XOR y[i+1]
-#     - Reshape kembali.
-
-#     Ini menghasilkan efek difusi (perubahan satu piksel mempengaruhi banyak output),
-#     dan masih invertible (dengan definisi inverse yang tepat).
-
-#     Nanti kamu tinggal GANTI fungsi ini dengan diffusion yang benar sesuai proposal.
-#     """
-#     H_, W_ = P_in.shape
-#     N = H_ * W_
-#     if S2.size != N:
-#         raise ValueError(f"Ukuran S2 harus H'*W'={N}, dapat {S2.size}.")
-
-#     x = P_in.flatten(order="C").astype(np.uint8)
-#     k = S2.astype(np.uint8)
-
-#     y = np.empty_like(x)
-
-#     # ===== Scan maju (forward diffusion) =====
-#     prev = np.uint8(0)
-#     for i in range(N):
-#         # BARIS PENTING: XOR chaining (difusi)
-#         y[i] = (x[i] ^ k[i]) ^ prev
-#         prev = y[i]
-
-#     # ===== Scan mundur (backward diffusion) =====
-#     z = np.empty_like(y)
-#     nxt = np.uint8(0)
-#     for i in range(N - 1, -1, -1):
-#         # BARIS PENTING: XOR chaining reverse
-#         z[i] = (y[i] ^ k[i]) ^ nxt
-#         nxt = z[i]
-
-#     return z.reshape((H_, W_), order="C").astype(np.uint8)
 
 def diffusion_oravec(P_in: np.ndarray, S2: np.ndarray) -> np.ndarray:
     """
@@ -570,61 +522,6 @@ def key_whitening(P_in: np.ndarray, S3: np.ndarray) -> np.ndarray:
     # ===== BARIS PENTING: XOR whitening sesuai persamaan proposal =====
     return (P_in.astype(np.uint8) ^ mask).astype(np.uint8)
 
-
-# =========================================================
-# 8) Plaintext-related row-wise (placeholder terstruktur)
-# =========================================================
-#! salah
-# def plaintext_related_encrypt_placeholder(
-#     Pprime: np.ndarray,
-#     rm: np.ndarray,
-#     cfg: BaselineConfig,
-#     K_hex: str,
-# ) -> np.ndarray:
-#     """
-#     WARNING:
-#     Tahap plaintext-related Oravec punya lookup table LT dan pembangkitan keystream per baris,
-#     dengan modifikasi parameter per baris:
-#         LT(a,:) = LT(a,:) + 10^{-15}*65536*P'(a-1,:)
-
-#     Karena definisi detail LT shuffle + cara membentuk KS(a,:) dari LT(a,:) cukup spesifik,
-#     saya buat placeholder yang tetap:
-#     - deterministik
-#     - menghasilkan output berbeda dari input
-#     - mudah diganti dengan implementasi final sesuai proposal
-
-#     Placeholder ini:
-#     - membangkitkan keystream per baris dari logistic map global berbasis key
-#     - XOR-kan ke setiap baris
-
-#     Nanti kamu GANTI isi fungsi ini dengan implementasi LT + update parameter (2.4) + XOR (2.5).
-#     """
-#     H_, W_ = Pprime.shape
-
-#     # Buat seed x0 deterministik dari key
-#     K_hex_clean = K_hex.strip().lower().replace("0x", "")
-#     seed_int = int(K_hex_clean[-8:], 16)  # ambil 32-bit akhir
-#     x0 = ((seed_int % 10_000_000) + 1) / 10_000_001.0
-
-#     # Pakai r rata-rata sebagai placeholder (nanti ganti pakai LT(a,:))
-#     r = float(np.mean(rm))
-
-#     out = Pprime.copy().astype(np.uint8)
-
-#     for a in range(H_):
-#         # Bangkitkan deret sepanjang W_ + T0
-#         seq = logistic_map_sequence(x0=x0, r=r, n=cfg.T0 + W_ + 1)[cfg.T0:cfg.T0 + W_]
-#         ks_int = (quantize_sequence(seq, cfg.Q) % 256).astype(np.uint8)
-
-#         # ===== BARIS PENTING: XOR row-wise (sesuai struktur persamaan 2.5) =====
-#         out[a, :] = out[a, :] ^ ks_int
-
-#         # update x0 agar baris berbeda (placeholder)
-#         x0 = float(seq[-1])
-
-#     return out
-
-#$ revisi
 
 def plaintext_related_encrypt(
     Pprime: np.ndarray,

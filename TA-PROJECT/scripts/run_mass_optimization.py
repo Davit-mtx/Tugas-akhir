@@ -30,8 +30,8 @@ def main():
     K_HEX = "00112233445566778899aabbccddeeff"
 
     # Batas Ruang Pencarian HO [r_min, eps, T0, Q]
-    lb = [3.5, 0.0001, 100, 10]
-    ub = [3.99, 0.05, 2000, 1000]
+    lb = [3.57, 1e-6, 500, 1]
+    ub = [3.99, 1e-2, 3000, 256]
 
     # Konfigurasi HO
     SearchAgents = 10

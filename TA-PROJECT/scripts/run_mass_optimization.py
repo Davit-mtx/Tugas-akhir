@@ -39,10 +39,22 @@ def main():
 
     print(f"Konfigurasi HO: {SearchAgents} Agen, {Max_iterations} Iterasi per gambar.\n")
 
+    master_csv_path = output_base_dir / "summary_optimized_results.csv"
+    
+    # 2. Fitur Auto-Resume: Cek file yang sudah ada di CSV
+    processed_files = set()
+    if master_csv_path.exists():
+        try:
+            df_existing = pd.read_csv(master_csv_path)
+            processed_files = set(df_existing["File Name"].tolist())
+            print(f"Auto-Resume: Ditemukan {len(processed_files)} file yang sudah diproses di CSV. File-file ini akan dilewati.\n")
+        except Exception as e:
+            print(f"Gagal membaca CSV untuk resume: {e}")
+
     all_results = []
     all_ho_curves = [] # Menampung kurva konvergensi dari semua gambar
 
-    # 2. Looping per Kategori
+    # 3. Looping per Kategori
     for category in categories:
         input_cat_dir = input_base_dir / category
         
@@ -56,9 +68,13 @@ def main():
         image_files = list(input_cat_dir.glob("*.png")) + list(input_cat_dir.glob("*.jpg"))
         print(f"--- Memproses Kategori: {category.upper()} ({len(image_files)} gambar) ---")
 
-        # 3. Looping per Gambar
+        # 4. Looping per Gambar
         for idx, img_path in enumerate(image_files, 1):
             
+            if img_path.name in processed_files:
+                print(f"  [{idx}/{len(image_files)}] Melewati (Skip): {img_path.name} (sudah selesai sebelumnya)")
+                continue
+
             img_bgr = cv2.imread(str(img_path))
             if img_bgr is None: continue
             img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
@@ -136,20 +152,25 @@ def main():
                     "Lossless": is_lossless
                 }
 
+                # Simpan incremental ke CSV agar tidak hilang jika terhenti
+                df_row = pd.DataFrame([data_row])
+                if not master_csv_path.exists():
+                    df_row.to_csv(master_csv_path, index=False)
+                else:
+                    df_row.to_csv(master_csv_path, mode='a', header=False, index=False)
+                
+                # Masukkan ke set processed_files agar jika di-run ulang dalam sesi yang sama tidak double
+                processed_files.add(img_path.name)
+
                 all_results.append(data_row)
                 print(f"Selesai (Fit: {best_score:.4f}, Entropi: {entropy:.4f})")
 
             except Exception as e:
                 print(f"GAGAL ({e})")
 
-    # 4. Membuat File Rekapitulasi Master & Grafik
-    if all_results:
-        # Ekspor CSV
-        df_master = pd.DataFrame(all_results)
-        master_csv_path = output_base_dir / "optimized/summary_optimized_results.csv"
-        df_master.to_csv(master_csv_path, index=False)
-        
-        # Cetak Grafik Rata-Rata Konvergensi
+    # 5. Membuat Grafik (CSV sudah dibuat otomatis secara incremental)
+    if master_csv_path.exists():
+        # Cetak Grafik Rata-Rata Konvergensi (dari iterasi terbaru yang dijalankan)
         if all_ho_curves:
             # Rata-rata dari seluruh array curve secara vertikal (axis=0)
             avg_curve = np.mean(all_ho_curves, axis=0)
@@ -162,7 +183,7 @@ def main():
             plt.grid(True, linestyle='--', alpha=0.7)
             plt.legend()
             
-            plot_path = output_base_dir / "optimized/average_convergence_curve.png"
+            plot_path = output_base_dir / "average_convergence_curve.png"
             plt.savefig(plot_path, dpi=300)
             plt.close()
             

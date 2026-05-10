@@ -11,7 +11,9 @@ def main():
     
     # Ambil salah satu gambar Juara dari folder appendix
     # PASTIKAN nama file ini ada di dalam folder appendix Anda!
-    out_dir = PROJECT_ROOT / "data/results/plots"
+    out_dir = PROJECT_ROOT / "data/results/plots/analisis_histogram"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    
     appendix_dir = PROJECT_ROOT / "data/results/appendix"
     
     # Mencari gambar Original dan Cipher dari salah satu juara (misal kategori High)
@@ -39,8 +41,8 @@ def main():
         axes[1, i].set_xlim([0, 256])
 
     plt.tight_layout()
-    plt.savefig(out_dir / "4_Histogram_Analysis.png", dpi=300)
-    print(f"Berhasil disimpan di: {out_dir}/4_Histogram_Analysis.png")
+    plt.savefig(out_dir / "Histogram_Analysis.png", dpi=300)
+    print(f"Berhasil disimpan di: {out_dir}/Histogram_Analysis.png")
 
 if __name__ == "__main__":
     main()

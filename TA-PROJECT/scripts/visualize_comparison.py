@@ -17,7 +17,7 @@ def main():
 
     baseline_csv = PROJECT_ROOT / "data/results/baseline/summary_all_results.csv"
     optimized_csv = PROJECT_ROOT / "data/results/optimized/summary_optimized_results.csv"
-    out_dir = PROJECT_ROOT / "data/results/plots"
+    out_dir = PROJECT_ROOT / "data/results/plots/comparison_analysis"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if not baseline_csv.exists() or not optimized_csv.exists():

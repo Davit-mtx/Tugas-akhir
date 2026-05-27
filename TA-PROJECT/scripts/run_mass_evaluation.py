@@ -89,12 +89,21 @@ def main():
                 cipher_2, _ = encrypt_baseline(img_rgb_modified, K, cfg=cfg, return_debug=False)
 
                 # --- D. Menghitung Metrik Keamanan (Fokus Channel R untuk evaluasi) ---
-                R_channel = cipher_1[:, :, 0]
-                R_channel_modified = cipher_2[:, :, 0]
+                # R_channel = cipher_1[:, :, 0]
+                # R_channel_modified = cipher_2[:, :, 0]
 
-                entropy = calculate_entropy(R_channel)
-                corr = calculate_correlation(R_channel)
-                npcr, uaci = calculate_npcr_uaci(R_channel, R_channel_modified)
+                # entropy = calculate_entropy(R_channel)
+                # corr = calculate_correlation(R_channel)
+                # npcr, uaci = calculate_npcr_uaci(R_channel, R_channel_modified)
+                CHANNELS = {"R": 0, "G": 1, "B": 2}
+
+                for channel_name, channel_index in CHANNELS.items():
+                    original_channel = cipher_1[:, :, channel_index]
+                    modified_channel = cipher_2[:, :, channel_index]
+
+                    entropy = calculate_entropy(original_channel)
+                    corr = calculate_correlation(original_channel)
+                    npcr, uaci = calculate_npcr_uaci(original_channel, modified_channel)
 
                 # --- E. Menyimpan Data ke Dictionary ---
                 data_row = {

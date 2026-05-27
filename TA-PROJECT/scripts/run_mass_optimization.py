@@ -124,12 +124,21 @@ def main():
                 cipher_mod, _ = encrypt_baseline(img_rgb_modified, K_HEX, cfg=opt_cfg, return_debug=False)
 
                 # Menghitung Metrik Keamanan (Channel R)
-                R_channel = cipher_opt[:, :, 0]
-                R_channel_modified = cipher_mod[:, :, 0]
+                # R_channel = cipher_opt[:, :, 0]
+                # R_channel_modified = cipher_mod[:, :, 0]
 
-                entropy = calculate_entropy(R_channel)
-                corr = calculate_correlation(R_channel)
-                npcr, uaci = calculate_npcr_uaci(R_channel, R_channel_modified)
+                # entropy = calculate_entropy(R_channel)
+                # corr = calculate_correlation(R_channel)
+                # npcr, uaci = calculate_npcr_uaci(R_channel, R_channel_modified)
+                CHANNELS = {"R": 0, "G": 1, "B": 2}
+
+                for channel_name, channel_index in CHANNELS.items():
+                    original_channel = cipher_opt[:, :, channel_index]
+                    modified_channel = cipher_mod[:, :, channel_index]
+
+                    entropy = calculate_entropy(original_channel)
+                    corr = calculate_correlation(original_channel)
+                    npcr, uaci = calculate_npcr_uaci(original_channel, modified_channel)
 
                 # --- C. Menyimpan Data ---
                 data_row = {

@@ -12,6 +12,53 @@ sys.path.append(str(PROJECT_ROOT))
 from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConfig
 from src.metrics.metric import calculate_entropy, calculate_correlation, calculate_npcr_uaci, verify_lossless
 
+def calculate_rgb_metrics(cipher_original, cipher_modified):
+    channel_map = {
+        "R": 0,
+        "G": 1,
+        "B": 2
+    }
+
+    entropy_values = []
+    corr_h_values = []
+    corr_v_values = []
+    corr_d_values = []
+    npcr_values = []
+    uaci_values = []
+
+    rgb_metrics = {}
+
+    for channel_name, channel_idx in channel_map.items():
+        channel_original = cipher_original[:, :, channel_idx]
+        channel_modified = cipher_modified[:, :, channel_idx]
+
+        entropy_ch = calculate_entropy(channel_original)
+        corr_ch = calculate_correlation(channel_original)
+        npcr_ch, uaci_ch = calculate_npcr_uaci(channel_original, channel_modified)
+
+        entropy_values.append(entropy_ch)
+        corr_h_values.append(corr_ch["horizontal"])
+        corr_v_values.append(corr_ch["vertical"])
+        corr_d_values.append(corr_ch["diagonal"])
+        npcr_values.append(npcr_ch)
+        uaci_values.append(uaci_ch)
+
+        rgb_metrics[f"Entropy_{channel_name}"] = round(entropy_ch, 5)
+        rgb_metrics[f"Corr_Horizontal_{channel_name}"] = round(corr_ch["horizontal"], 5)
+        rgb_metrics[f"Corr_Vertical_{channel_name}"] = round(corr_ch["vertical"], 5)
+        rgb_metrics[f"Corr_Diagonal_{channel_name}"] = round(corr_ch["diagonal"], 5)
+        rgb_metrics[f"NPCR_{channel_name} (%)"] = round(npcr_ch, 5)
+        rgb_metrics[f"UACI_{channel_name} (%)"] = round(uaci_ch, 5)
+
+    rgb_metrics["Entropy"] = round(np.mean(entropy_values), 5)
+    rgb_metrics["Corr_Horizontal"] = round(np.mean(corr_h_values), 5)
+    rgb_metrics["Corr_Vertical"] = round(np.mean(corr_v_values), 5)
+    rgb_metrics["Corr_Diagonal"] = round(np.mean(corr_d_values), 5)
+    rgb_metrics["NPCR (%)"] = round(np.mean(npcr_values), 5)
+    rgb_metrics["UACI (%)"] = round(np.mean(uaci_values), 5)
+
+    return rgb_metrics
+
 def main():
     print("=== MEMULAI EVALUASI MASSAL (MASS EVALUATION) DENGAN PENYIMPANAN FISIK ===")
     
@@ -89,32 +136,13 @@ def main():
                 cipher_2, _ = encrypt_baseline(img_rgb_modified, K, cfg=cfg, return_debug=False)
 
                 # --- D. Menghitung Metrik Keamanan (Fokus Channel R untuk evaluasi) ---
-                # R_channel = cipher_1[:, :, 0]
-                # R_channel_modified = cipher_2[:, :, 0]
-
-                # entropy = calculate_entropy(R_channel)
-                # corr = calculate_correlation(R_channel)
-                # npcr, uaci = calculate_npcr_uaci(R_channel, R_channel_modified)
-                CHANNELS = {"R": 0, "G": 1, "B": 2}
-
-                for channel_name, channel_index in CHANNELS.items():
-                    original_channel = cipher_1[:, :, channel_index]
-                    modified_channel = cipher_2[:, :, channel_index]
-
-                    entropy = calculate_entropy(original_channel)
-                    corr = calculate_correlation(original_channel)
-                    npcr, uaci = calculate_npcr_uaci(original_channel, modified_channel)
+                rgb_metrics = calculate_rgb_metrics(cipher_1, cipher_2)
 
                 # --- E. Menyimpan Data ke Dictionary ---
                 data_row = {
                     "File Name": img_path.name,
                     "Category": category,
-                    "Entropy": round(entropy, 5),
-                    "Corr_Horizontal": round(corr['horizontal'], 5),
-                    "Corr_Vertical": round(corr['vertical'], 5),
-                    "Corr_Diagonal": round(corr['diagonal'], 5),
-                    "NPCR (%)": round(npcr, 5),
-                    "UACI (%)": round(uaci, 5),
+                    **rgb_metrics,
                     "Enc_Time (s)": round(t_enc, 4),
                     "Dec_Time (s)": round(t_dec, 4),
                     "Lossless": is_lossless

@@ -10,7 +10,7 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Import mesin kriptografi untuk pengujian properti kunci langsung di tempat
 from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConfig
-from src.metrics.metric import calculate_npcr_uaci, calculate_correlation
+from src.metrics.metric import calculate_npcr_uaci
 
 def main():
     print("=== ANALISIS KOMPREHENSIF TUJUAN 3: BASELINE vs OPTIMASI HO ===\n")

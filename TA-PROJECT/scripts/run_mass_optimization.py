@@ -62,53 +62,6 @@ def calculate_rgb_metrics(cipher_original, cipher_modified):
 
     return rgb_metrics
 
-def calculate_rgb_metrics(cipher_original, cipher_modified):
-    channel_map = {
-        "R": 0,
-        "G": 1,
-        "B": 2
-    }
-
-    entropy_values = []
-    corr_h_values = []
-    corr_v_values = []
-    corr_d_values = []
-    npcr_values = []
-    uaci_values = []
-
-    rgb_metrics = {}
-
-    for channel_name, channel_idx in channel_map.items():
-        channel_original = cipher_original[:, :, channel_idx]
-        channel_modified = cipher_modified[:, :, channel_idx]
-
-        entropy_ch = calculate_entropy(channel_original)
-        corr_ch = calculate_correlation(channel_original)
-        npcr_ch, uaci_ch = calculate_npcr_uaci(channel_original, channel_modified)
-
-        entropy_values.append(entropy_ch)
-        corr_h_values.append(corr_ch["horizontal"])
-        corr_v_values.append(corr_ch["vertical"])
-        corr_d_values.append(corr_ch["diagonal"])
-        npcr_values.append(npcr_ch)
-        uaci_values.append(uaci_ch)
-
-        rgb_metrics[f"Entropy_{channel_name}"] = round(entropy_ch, 5)
-        rgb_metrics[f"Corr_Horizontal_{channel_name}"] = round(corr_ch["horizontal"], 5)
-        rgb_metrics[f"Corr_Vertical_{channel_name}"] = round(corr_ch["vertical"], 5)
-        rgb_metrics[f"Corr_Diagonal_{channel_name}"] = round(corr_ch["diagonal"], 5)
-        rgb_metrics[f"NPCR_{channel_name} (%)"] = round(npcr_ch, 5)
-        rgb_metrics[f"UACI_{channel_name} (%)"] = round(uaci_ch, 5)
-
-    rgb_metrics["Entropy"] = round(np.mean(entropy_values), 5)
-    rgb_metrics["Corr_Horizontal"] = round(np.mean(corr_h_values), 5)
-    rgb_metrics["Corr_Vertical"] = round(np.mean(corr_v_values), 5)
-    rgb_metrics["Corr_Diagonal"] = round(np.mean(corr_d_values), 5)
-    rgb_metrics["NPCR (%)"] = round(np.mean(npcr_values), 5)
-    rgb_metrics["UACI (%)"] = round(np.mean(uaci_values), 5)
-
-    return rgb_metrics
-
 def main():
     print("=== MEMULAI OPTIMASI MASSAL (MASS OPTIMIZATION) DENGAN HO ===")
     

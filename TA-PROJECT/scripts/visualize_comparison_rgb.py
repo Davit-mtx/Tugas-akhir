@@ -12,7 +12,7 @@ plt.style.use("seaborn-v0_8-whitegrid")
 sns.set_context("paper", font_scale=1.2)
 
 CATEGORIES = ["high", "medium", "low"]
-LABELS = ["High (DMOS Rendah)", "Medium", "Low (DMOS Tinggi)"]
+LABELS = ["High (DMOS Tinggi)", "Medium", "Low (DMOS Rendah)"]
 CHANNELS = ["R", "G", "B"]
 
 

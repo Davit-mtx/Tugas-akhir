@@ -175,7 +175,7 @@ def main():
     df["Category"] = pd.Categorical(df["Category"], categories=CATEGORIES, ordered=True)
 
     # Pemetaan label untuk grafik (KADID-10k: High = Bagus/DMOS Rendah, Low = Rusak/DMOS Tinggi)
-    label_map = {"high": "High (Bagus/DMOS Rendah)", "medium": "Medium", "low": "Low (Rusak/DMOS Tinggi)"}
+    label_map = {"high": "High (Bagus/DMOS Tinggi)", "medium": "Medium", "low": "Low (Rusak/DMOS Rendah)"}
     df["Label"] = df["Category"].map(label_map)
 
     print("-> Menghitung tabel statistik RGB...")

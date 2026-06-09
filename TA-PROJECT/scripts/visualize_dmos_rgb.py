@@ -34,6 +34,7 @@ def add_avg_correlation(df):
 
 def build_stat_summary(df, out_dir):
     candidate_columns = [
+        "Best_Fitness",
         "Opt_r_min", "Opt_eps", "Opt_T0", "Opt_Q",
         "Entropy", "Entropy_R", "Entropy_G", "Entropy_B",
         "Corr_Horizontal", "Corr_Vertical", "Corr_Diagonal", "Avg_Corr",
@@ -165,7 +166,7 @@ def main():
     df = pd.read_csv(opt_csv_path)
     require_columns(
         df,
-        ["Category", "Opt_r_min", "Opt_eps", "Opt_T0", "Opt_Q", "Entropy", "Corr_Horizontal", "Corr_Vertical", "Corr_Diagonal"],
+        ["Category", "Best_Fitness", "Opt_r_min", "Opt_eps", "Opt_T0", "Opt_Q", "Entropy", "Corr_Horizontal", "Corr_Vertical", "Corr_Diagonal"],
         "summary_optimized_results.csv",
     )
 

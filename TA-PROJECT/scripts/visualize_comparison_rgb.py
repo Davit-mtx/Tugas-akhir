@@ -157,24 +157,71 @@ def plot_correlation(df, out_dir):
 
 
 def plot_time(df, out_dir):
+    # Hapus plot lama yang tergabung jika ada
+    old_time_plot = out_dir / "3_Time_Efficiency.png"
+    if old_time_plot.exists():
+        old_time_plot.unlink()
+        print("-> File visualisasi lama 3_Time_Efficiency.png berhasil dihapus.")
+
+    # 1. Waktu Enkripsi
     plt.figure(figsize=(8, 6))
     data_enc_base = df["Enc_Time (s)_base"]
     data_enc_opt = df["Enc_Time (s)_opt"]
-
     plt.boxplot(
         [data_enc_base, data_enc_opt],
-        labels=["Enkripsi Baseline", "Enkripsi Param HO"],
+        tick_labels=["Enkripsi Baseline", "Enkripsi Param HO"],
         patch_artist=True,
         boxprops=dict(facecolor="#D2B4DE"),
     )
     plt.ylabel("Waktu Komputasi (Detik)")
     plt.title("Distribusi Waktu Enkripsi (Tanpa Waktu Pencarian HO)")
     plt.grid(True, axis="y", linestyle="--", alpha=0.7)
-
     plt.tight_layout()
-    plt.savefig(out_dir / "3_Time_Efficiency.png", dpi=300)
+    out_enc_plot = out_dir / "3_Time_Encryption.png"
+    plt.savefig(out_enc_plot, dpi=300)
     plt.close()
-    print("-> Grafik Waktu Komputasi berhasil disimpan.")
+    print("-> Grafik Waktu Enkripsi berhasil disimpan.")
+
+    # 2. Waktu Dekripsi
+    plt.figure(figsize=(8, 6))
+    data_dec_base = df["Dec_Time (s)_base"]
+    data_dec_opt = df["Dec_Time (s)_opt"]
+    plt.boxplot(
+        [data_dec_base, data_dec_opt],
+        tick_labels=["Dekripsi Baseline", "Dekripsi Param HO"],
+        patch_artist=True,
+        boxprops=dict(facecolor="#AED6F1"),
+    )
+    plt.ylabel("Waktu Komputasi (Detik)")
+    plt.title("Distribusi Waktu Dekripsi")
+    plt.grid(True, axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+    out_dec_plot = out_dir / "3_Time_Decryption.png"
+    plt.savefig(out_dec_plot, dpi=300)
+    plt.close()
+    print("-> Grafik Waktu Dekripsi berhasil disimpan.")
+
+    # 3. Waktu Pencarian HO
+    ho_col = "HO_Time (s)_opt" if "HO_Time (s)_opt" in df.columns else "HO_Time (s)"
+    if ho_col in df.columns:
+        plt.figure(figsize=(8, 6))
+        data_ho = df[ho_col]
+        plt.boxplot(
+            [data_ho],
+            tick_labels=["Pencarian Param HO"],
+            patch_artist=True,
+            boxprops=dict(facecolor="#A9DFBF"),
+        )
+        plt.ylabel("Waktu Komputasi (Detik)")
+        plt.title("Distribusi Waktu Pencarian Parameter HO")
+        plt.grid(True, axis="y", linestyle="--", alpha=0.7)
+        plt.tight_layout()
+        out_ho_plot = out_dir / "3_Time_HO.png"
+        plt.savefig(out_ho_plot, dpi=300)
+        plt.close()
+        print("-> Grafik Waktu Pencarian HO berhasil disimpan.")
+
+
 
 
 def plot_metric_percentage(df, out_dir, metric_name, output_name, title):
@@ -266,12 +313,12 @@ def main():
 
     require_columns(
         df_base,
-        ["File Name", "Category", "Entropy", "Corr_Horizontal", "Corr_Vertical", "Corr_Diagonal", "Enc_Time (s)"],
+        ["File Name", "Category", "Entropy", "Corr_Horizontal", "Corr_Vertical", "Corr_Diagonal", "Enc_Time (s)", "Dec_Time (s)"],
         "summary_all_results.csv",
     )
     require_columns(
         df_opt,
-        ["File Name", "Category", "Entropy", "Corr_Horizontal", "Corr_Vertical", "Corr_Diagonal", "Enc_Time (s)"],
+        ["File Name", "Category", "Entropy", "Corr_Horizontal", "Corr_Vertical", "Corr_Diagonal", "Enc_Time (s)", "Dec_Time (s)", "HO_Time (s)"],
         "summary_optimized_results.csv",
     )
 

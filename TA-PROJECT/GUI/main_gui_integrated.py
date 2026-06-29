@@ -587,6 +587,7 @@ class CryptoGUI(ctk.CTk):
     def load_optimized_csv(self):
         file_path = filedialog.askopenfilename(
             title="Pilih CSV Hasil Optimized",
+            initialdir=r"D:\TA\Tugas-akhir\TA-PROJECT\data\results\optimized",
             filetypes=[
                 ("CSV files", "*.csv"),
                 ("All files", "*.*")
@@ -662,6 +663,7 @@ class CryptoGUI(ctk.CTk):
     def load_and_validate_image(self):
         file_path = filedialog.askopenfilename(
             title="Pilih Citra",
+            initialdir=r"D:\TA\Tugas-akhir\TA-PROJECT\data\results\optimized\dekripsi",
             filetypes=[
                 ("Image files", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff"),
                 ("All files", "*.*")

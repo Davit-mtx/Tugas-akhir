@@ -1,6 +1,6 @@
 import numpy as np
 from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConfig
-from src.metrics.metric import calculate_entropy, calculate_correlation, verify_lossless
+from src.metrics.metric import calculate_entropy, calculate_correlation, verify_lossless_mse_psnr
 
 
 def _calculate_rgb_fitness_components(C: np.ndarray) -> tuple[float, float]:
@@ -79,7 +79,9 @@ def evaluate_fitness(P: np.ndarray, K_hex: str, X_candidate: np.ndarray) -> floa
         return 1e10
 
     # 4. Penalti dekripsi lossless
-    if not verify_lossless(P, P_hat):
+    lossless_result = verify_lossless_mse_psnr(P, P_hat)
+
+    if not lossless_result["Lossless"]:
         return 1e10
 
     # 5. Perhitungan komponen fitness berbasis RGB

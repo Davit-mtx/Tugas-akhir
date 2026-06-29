@@ -63,8 +63,53 @@ def calculate_npcr_uaci(C1_channel: np.ndarray, C2_channel: np.ndarray) -> tuple
     
     return float(npcr), float(uaci)
 
-def verify_lossless(P: np.ndarray, P_hat: np.ndarray) -> bool:
+# verifikasi lossless menggunakan MSE dan PSNR
+def calculate_mse(img1: np.ndarray, img2: np.ndarray) -> float:
     """
-    Memverifikasi keberhasilan dekripsi mutlak P == P^ (Persamaan 2.42).
+    Menghitung Mean Squared Error (MSE) antara dua citra.
+    Untuk verifikasi dekripsi lossless, citra asli dibandingkan
+    dengan citra hasil dekripsi.
     """
-    return np.array_equal(P, P_hat)
+    if img1.shape != img2.shape:
+        raise ValueError("Ukuran citra harus sama untuk menghitung MSE.")
+
+    img1 = img1.astype(np.float64)
+    img2 = img2.astype(np.float64)
+
+    mse = np.mean((img1 - img2) ** 2)
+    return float(mse)
+
+
+def calculate_psnr(img1: np.ndarray, img2: np.ndarray, max_pixel_value: float = 255.0) -> float:
+    """
+    Menghitung Peak Signal-to-Noise Ratio (PSNR) antara dua citra.
+    Jika MSE = 0, maka PSNR = infinity.
+    """
+    mse = calculate_mse(img1, img2)
+
+    if mse == 0:
+        return float("inf")
+
+    psnr = 10 * np.log10((max_pixel_value ** 2) / mse)
+    return float(psnr)
+
+
+def verify_lossless_mse_psnr(P: np.ndarray, P_hat: np.ndarray) -> dict:
+    """
+    Memverifikasi apakah hasil dekripsi bersifat lossless
+    menggunakan MSE dan PSNR.
+
+    Citra dikatakan lossless apabila:
+    - MSE = 0
+    - PSNR = infinity
+    """
+    mse = calculate_mse(P, P_hat)
+    psnr = calculate_psnr(P, P_hat)
+
+    is_lossless = (mse == 0)
+
+    return {
+        "MSE": mse,
+        "PSNR": psnr,
+        "Lossless": is_lossless
+    }

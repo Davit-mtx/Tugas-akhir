@@ -10,7 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
 from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConfig
-from src.metrics.metric import calculate_entropy, calculate_correlation, calculate_npcr_uaci, verify_lossless
+from src.metrics.metric import calculate_entropy, calculate_correlation, calculate_npcr_uaci, verify_lossless_mse_psnr
 
 def calculate_rgb_metrics(cipher_original, cipher_modified):
     channel_map = {
@@ -126,7 +126,11 @@ def main():
                 cv2.imwrite(str(out_dec_base_dir / category / img_path.name), cv2.cvtColor(decrypted, cv2.COLOR_RGB2BGR))
 
                 # --- B. Memverifikasi Lossless ---
-                is_lossless = verify_lossless(img_rgb, decrypted)
+                lossless_result = verify_lossless_mse_psnr(img_rgb, decrypted)
+
+                mse_dec = lossless_result["MSE"]
+                psnr_dec = lossless_result["PSNR"]
+                is_lossless = lossless_result["Lossless"]
 
                 # --- C. Persiapan NPCR/UACI (Ubah 1 piksel pada Red Channel plaintext) ---
                 img_rgb_modified = img_rgb.copy()
@@ -143,6 +147,8 @@ def main():
                     "File Name": img_path.name,
                     "Category": category,
                     **rgb_metrics,
+                    "MSE_Dec": round(mse_dec, 6),
+                    "PSNR_Dec": psnr_dec,
                     "Enc_Time (s)": round(t_enc, 4),
                     "Dec_Time (s)": round(t_dec, 4),
                     "Lossless": is_lossless

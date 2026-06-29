@@ -13,7 +13,7 @@ sys.path.append(str(PROJECT_ROOT))
 from src.ho.optimizer import run_ho
 from src.ho.fitness import evaluate_fitness
 from src.crypto.pipeline import encrypt_baseline, decrypt_baseline, BaselineConfig
-from src.metrics.metric import calculate_entropy, calculate_correlation, calculate_npcr_uaci, verify_lossless
+from src.metrics.metric import calculate_entropy, calculate_correlation, calculate_npcr_uaci, verify_lossless_mse_psnr
 
 def calculate_rgb_metrics(cipher_original, cipher_modified):
     channel_map = {
@@ -162,7 +162,11 @@ def main():
                 cv2.imwrite(str(out_dec_opt_dir / category / img_path.name), cv2.cvtColor(decrypted, cv2.COLOR_RGB2BGR))
 
                 # Validasi Lossless
-                is_lossless = verify_lossless(img_rgb, decrypted)
+                lossless_result = verify_lossless_mse_psnr(img_rgb, decrypted)
+
+                mse_dec = lossless_result["MSE"]
+                psnr_dec = lossless_result["PSNR"]
+                is_lossless = lossless_result["Lossless"]
 
                 # Persiapan NPCR/UACI (XOR 1 bit)
                 img_rgb_modified = img_rgb.copy()
@@ -183,6 +187,8 @@ def main():
                     "Opt_T0": opt_cfg.T0,
                     "Opt_Q": opt_cfg.Q,
                     **rgb_metrics,
+                    "MSE_Dec": round(mse_dec, 6),
+                    "PSNR_Dec": psnr_dec,
                     "Enc_Time (s)": round(t_enc, 4),
                     "Dec_Time (s)": round(t_dec, 4),
                     "HO_Time (s)": round(opt_time, 2),
